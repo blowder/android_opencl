@@ -3,14 +3,19 @@ package billcollector.app.activities;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import billcollector.app.R;
 import billcollector.app.utils.Constants;
+import billcollector.app.utils.FSFileLocator;
+import billcollector.app.utils.FileLocator;
 import billcollector.app.utils.OpenCvUtils;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -22,15 +27,34 @@ import java.io.File;
  * Created by sesshoumaru on 19.09.15.
  */
 public class MainScreenActivity extends Activity {
+    private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
     public static String TAG = "MainScreenActivity";
+    private File picture = null;
+    private FileLocator fileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
 
-    private View.OnClickListener cameraButtonListener = new View.OnClickListener() {
+    private View.OnClickListener customCameraIntend = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             Intent i = new Intent(v.getContext(), CameraActivity.class);
             startActivity(i);
         }
     };
+
+    private View.OnClickListener nativeCameraIntend = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            picture = fileLocator.locate(Environment.DIRECTORY_PICTURES, "test.png");
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(picture));
+            startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+        }
+    };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        System.out.println("picture is " + picture);
+    }
+
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -69,7 +93,7 @@ public class MainScreenActivity extends Activity {
     private void addListenersForButtons() {
         Button cameraButton = (Button) findViewById(R.id.main_screen_camera_button);
         Button aboutButton = (Button) findViewById(R.id.main_screen_about_button);
-        cameraButton.setOnClickListener(cameraButtonListener);
+        cameraButton.setOnClickListener(nativeCameraIntend);
         aboutButton.setOnClickListener(aboutButtonListener);
     }
 
