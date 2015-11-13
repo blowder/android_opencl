@@ -56,7 +56,6 @@ public class OpenCvUtils {
             if (appRect.width > appRect.height)
                 boundRect.add(appRect);
             //}
-
         }
         return boundRect;
     }

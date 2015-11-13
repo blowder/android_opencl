@@ -32,11 +32,15 @@ public class MainScreenActivity extends Activity {
     private File picture = null;
     private FileLocator fileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
 
-    private View.OnClickListener customCameraIntend = new View.OnClickListener() {
+    private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent i = new Intent(v.getContext(), CameraActivity.class);
-            startActivity(i);
+            Context context = getApplicationContext();
+            CharSequence text = "About button was pressed!";
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
+
         }
     };
 
@@ -52,34 +56,8 @@ public class MainScreenActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //TODO add manipulation when we already have image file
         System.out.println("picture is " + picture);
-    }
-
-    private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Context context = getApplicationContext();
-            CharSequence text = "About button was pressed!";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-            //TODO delete this
-            onlyForOpenCVTest();
-        }
-    };
-
-    private void onlyForOpenCVTest() {
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                File imageFolder = new File(Constants.APP_IMAGE_FOLDER);
-                File[] files = imageFolder.listFiles() != null ? imageFolder.listFiles() : new File[]{};
-                for (File file : files) {
-                    OpenCvUtils.adaptiveThreshold(file, file);
-                }
-                return null;
-            }
-        }.execute();
     }
 
 
@@ -107,14 +85,12 @@ public class MainScreenActivity extends Activity {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
-                case LoaderCallbackInterface.SUCCESS: {
+                case LoaderCallbackInterface.SUCCESS:
                     Log.i(TAG, "OpenCV was loaded");
-                }
-                break;
-                default: {
+                    break;
+                default:
                     super.onManagerConnected(status);
-                }
-                break;
+                    break;
             }
         }
     };

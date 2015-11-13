@@ -11,5 +11,7 @@ import static android.os.Environment.getExternalStoragePublicDirectory;
  */
 public class Constants {
     public static String APP_NAME = "BillReaper";
-    public static String APP_IMAGE_FOLDER = new File(getExternalStoragePublicDirectory(DIRECTORY_PICTURES), APP_NAME).getAbsolutePath();
+    public static String APP_IMAGE_FOLDER = "";
+    //public static String APP_IMAGE_FOLDER = new File(getExternalStoragePublicDirectory(DIRECTORY_PICTURES), APP_NAME).getAbsolutePath();
+    public static String SERVER_HOST = "http://checkpin.easymart.com.ua";
 }
