@@ -43,4 +43,6 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':app:libs:OpenCV')
     compile 'com.squareup.retrofit:retrofit:1.9.0'
+    compile 'com.path:android-priority-jobqueue:1.1.2'
+    compile 'com.google.guava:guava:18.0'
 }

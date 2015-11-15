@@ -1,6 +1,5 @@
 package billcollector.app.requests;
 
-import billcollector.app.utils.Requests;
 import retrofit.http.POST;
 import retrofit.http.Part;
 

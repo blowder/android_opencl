@@ -1,7 +1,6 @@
 package billcollector.app.requests;
 
 import billcollector.app.dto.UploadConf;
-import billcollector.app.utils.Requests;
 import retrofit.http.GET;
 
 public interface UploadConfigurationRequest {
