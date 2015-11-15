@@ -4,20 +4,19 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import billcollector.app.R;
 import billcollector.app.jobs.ImagePrepareJob;
-import billcollector.app.utils.Constants;
+import billcollector.app.jobs.ImageUploarJob;
 import billcollector.app.utils.FSFileLocator;
 import billcollector.app.utils.FileLocator;
-import billcollector.app.utils.OpenCvUtils;
 import com.path.android.jobqueue.JobManager;
 import com.path.android.jobqueue.config.Configuration;
 import com.path.android.jobqueue.log.CustomLogger;
@@ -63,10 +62,17 @@ public class MainScreenActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //TODO add manipulation when we already have image file
         System.out.println("picture is " + picture);
-        if (picture != null)
+        if (picture != null) {
             jobManager.addJob(new ImagePrepareJob(picture));
+            //untested
+            //jobManager.addJob(new ImageUploarJob(picture, getPhoneIMEI()));
+        }
     }
 
+    private String getPhoneIMEI() {
+        TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
+        return tMgr.getDeviceId();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
