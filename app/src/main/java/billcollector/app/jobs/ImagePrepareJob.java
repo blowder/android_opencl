@@ -35,7 +35,7 @@ public class ImagePrepareJob extends Job {
         Collections.sort(rects, new Comparator<Rect>() {
             @Override
             public int compare(Rect lhs, Rect rhs) {
-                return Doubles.compare(lhs.area(), rhs.area());
+                return Doubles.compare(rhs.area(), lhs.area());
             }
         });
         try {
