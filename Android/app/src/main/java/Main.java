@@ -7,6 +7,7 @@ import retrofit.RestAdapter;
  */
 public class Main {
     public static void main(String... args) {
+        //hello
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint(Constants.SERVER_HOST)
                 .build();
