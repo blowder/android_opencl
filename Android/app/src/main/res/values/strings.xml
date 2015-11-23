@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BillReaper</string>
+    <string name="app_name">CheckPin</string>
     <string name="main_screen_camera_button">Make bill photo</string>
     <string name="main_screen_about_button">About</string>
     <string name="camera_activity_capture_button">Capture</string>

@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import com.shl.checkpin.android.R;
+import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
 import com.shl.checkpin.android.jobs.ImagePrepareJob;
 import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
@@ -77,6 +78,7 @@ public class MainScreenActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_screen);
+        startService(new Intent(this, MyInstanceIDListenerService.class));
         addListenersForButtons();
         configureJobManager();
     }
