@@ -1,27 +1,20 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:1.1.1'
-    }
-}
-apply plugin: 'com.android.application'
 
-repositories {
-    jcenter()
-}
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
+
 
 android {
-    compileSdkVersion 15
-    buildToolsVersion "19.1.0"
+    compileSdkVersion 23
+    buildToolsVersion "22.0.1"
 
     defaultConfig {
-        applicationId "billcollector.app"
+        applicationId "com.shl.checkpin.android"
         minSdkVersion 15
-        targetSdkVersion 15
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+
+        multiDexEnabled true
     }
 
     compileOptions {
@@ -45,4 +38,6 @@ dependencies {
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.path:android-priority-jobqueue:1.1.2'
     compile 'com.google.guava:guava:18.0'
+    compile "com.google.android.gms:play-services:8.3.0"
+    compile 'com.android.support:multidex:1.0.0'
 }
