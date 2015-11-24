@@ -16,18 +16,18 @@ import java.util.Arrays;
 /**
  * Created by sesshoumaru on 16.11.15.
  */
-public class ImageUploarJob extends Job {
-    public static final int PRIORITY = 2;
+public class ImageUploadJob extends Job {
+    public static final int PRIORITY = 5;
     private File image;
-    private String imei;
+    private String phoneNumber;
     RestAdapter restAdapter = new RestAdapter.Builder()
             .setEndpoint(Constants.SERVER_HOST)
             .build();
 
-    public ImageUploarJob(File image, String imei) {
+    public ImageUploadJob(File image, String imei) {
         super(new Params(PRIORITY).requireNetwork().persist());
         this.image = image;
-        this.imei = imei;
+        this.phoneNumber = imei;
     }
 
     @Override
@@ -37,7 +37,7 @@ public class ImageUploarJob extends Job {
 
     @Override
     public void onRun() throws Throwable {
-        String token = restAdapter.create(AuthTokenRequest.class).get(imei);
+        String token = restAdapter.create(AuthTokenRequest.class).get(phoneNumber);
 
         UploadConf uploadConf = restAdapter.create(UploadConfigurationRequest.class).getConfiguration();
         if (image == null || !image.exists()) {

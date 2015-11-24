@@ -15,7 +15,7 @@ import java.util.*;
  * Created by sesshoumaru on 15.11.15.
  */
 public class ImagePrepareJob extends Job {
-    public static final int PRIORITY = 1;
+    public static final int PRIORITY = 10;
     private File image;
 
     public ImagePrepareJob(File image) {
@@ -30,6 +30,7 @@ public class ImagePrepareJob extends Job {
 
     @Override
     public void onRun() throws Throwable {
+        System.out.println("Image prepare job was started");
         Mat temp = Highgui.imread(image.getAbsolutePath());
         List<Rect> rects = new ArrayList<Rect>(OpenCvUtils.findSquares(temp));
         Collections.sort(rects, new Comparator<Rect>() {

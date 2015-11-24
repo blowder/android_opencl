@@ -15,6 +15,7 @@ import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
 import com.shl.checkpin.android.jobs.ImagePrepareJob;
+import com.shl.checkpin.android.services.JobHolder;
 import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
 import com.path.android.jobqueue.JobManager;
@@ -34,7 +35,6 @@ public class MainScreenActivity extends Activity {
     public static String TAG = "MainScreenActivity";
     private File picture = null;
     private FileLocator fileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
-    private JobManager jobManager;
 
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
@@ -63,9 +63,7 @@ public class MainScreenActivity extends Activity {
         //TODO add manipulation when we already have image file
         System.out.println("picture is " + picture);
         if (picture != null) {
-            jobManager.addJob(new ImagePrepareJob(picture));
-            //untested
-            //jobManager.addJob(new ImageUploarJob(picture, getPhoneIMEI()));
+            new JobHolder(this).addJob(picture);
         }
     }
 
@@ -80,40 +78,6 @@ public class MainScreenActivity extends Activity {
         setContentView(R.layout.main_screen);
         startService(new Intent(this, MyInstanceIDListenerService.class));
         addListenersForButtons();
-        configureJobManager();
-    }
-
-    private void configureJobManager() {
-        Configuration configuration = new Configuration.Builder(this)
-                .customLogger(new CustomLogger() {
-                    private static final String TAG = "JOBS";
-
-                    @Override
-                    public boolean isDebugEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public void d(String text, Object... args) {
-                        Log.d(TAG, String.format(text, args));
-                    }
-
-                    @Override
-                    public void e(Throwable t, String text, Object... args) {
-                        Log.e(TAG, String.format(text, args), t);
-                    }
-
-                    @Override
-                    public void e(String text, Object... args) {
-                        Log.e(TAG, String.format(text, args));
-                    }
-                })
-                .minConsumerCount(1)//always keep at least one consumer alive
-                .maxConsumerCount(1)//up to 3 consumers at a time
-                .loadFactor(1)//3 jobs per consumer
-                .consumerKeepAlive(120)//wait 2 minute
-                .build();
-        jobManager = new JobManager(this, configuration);
     }
 
     private void addListenersForButtons() {
