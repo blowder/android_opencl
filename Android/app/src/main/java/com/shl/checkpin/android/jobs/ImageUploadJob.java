@@ -4,6 +4,7 @@ import com.shl.checkpin.android.dto.UploadConf;
 import com.shl.checkpin.android.requests.AuthTokenRequest;
 import com.shl.checkpin.android.requests.UploadConfigurationRequest;
 import com.shl.checkpin.android.requests.UploadImageRequest;
+import com.shl.checkpin.android.services.JobHolder;
 import com.shl.checkpin.android.utils.Constants;
 import com.google.common.io.Files;
 import com.path.android.jobqueue.Job;
@@ -16,18 +17,20 @@ import java.util.Arrays;
 /**
  * Created by sesshoumaru on 16.11.15.
  */
-public class ImageUploarJob extends Job {
-    public static final int PRIORITY = 2;
+public class ImageUploadJob extends Job {
+    public static final int PRIORITY = 5;
     private File image;
-    private String imei;
+    private String phoneNumber;
+    private JobHolder jobHolder;
     RestAdapter restAdapter = new RestAdapter.Builder()
             .setEndpoint(Constants.SERVER_HOST)
             .build();
 
-    public ImageUploarJob(File image, String imei) {
+    public ImageUploadJob(JobHolder jobHolder, File image, String imei) {
         super(new Params(PRIORITY).requireNetwork().persist());
         this.image = image;
-        this.imei = imei;
+        this.phoneNumber = imei;
+        this.jobHolder = jobHolder;
     }
 
     @Override
@@ -37,7 +40,7 @@ public class ImageUploarJob extends Job {
 
     @Override
     public void onRun() throws Throwable {
-        String token = restAdapter.create(AuthTokenRequest.class).get(imei);
+        String token = restAdapter.create(AuthTokenRequest.class).get(phoneNumber);
 
         UploadConf uploadConf = restAdapter.create(UploadConfigurationRequest.class).getConfiguration();
         if (image == null || !image.exists()) {
@@ -57,6 +60,8 @@ public class ImageUploarJob extends Job {
             restAdapter.create(UploadImageRequest.class).upload(token, chunkId, chunksTotal, data);
             chunkId++;
         }
+        jobHolder.setStatus(image, JobHolder.Status.SENT);
+        jobHolder.removeJob(image);
     }
 
     @Override

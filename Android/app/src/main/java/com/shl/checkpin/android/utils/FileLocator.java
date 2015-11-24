@@ -8,7 +8,10 @@ import java.io.File;
  */
 public interface FileLocator {
     File locate(String context, String name);
+
     File getRoot();
+
     boolean isStorageWritable();
+
     boolean isStorageReadable();
 }
