@@ -6,5 +6,6 @@ package com.shl.checkpin.android.requests;
 public class Requests {
     public static final String UPLOAD_CONFIG = "/checkapi/config";
     public static final String IMAGE_UPLOAD = "/checkapi/upload";
-    public static final String AUTH_TOKEN = "/checkapi/auth";
+    public static final String UPLOAD_AUTH_TOKEN = "/auth-war/authapi/token/get";
+    public static final String REGISTER_GCM = "/auth-war/authapi/client/register";
 }

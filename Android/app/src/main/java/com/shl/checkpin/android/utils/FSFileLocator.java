@@ -23,7 +23,7 @@ public class FSFileLocator implements FileLocator {
     @Override
     public File locate(String context, String name) {
         return new File(getRoot().getAbsolutePath()
-                + File.separator + context
+                + (context != null ? File.separator + context : "")
                 + File.separator + name);
     }
 

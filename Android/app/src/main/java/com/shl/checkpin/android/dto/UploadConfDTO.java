@@ -3,7 +3,7 @@ package com.shl.checkpin.android.dto;
 /**
  * Created by vfedin on 11.11.2015.
  */
-public class UploadConf {
+public class UploadConfDTO {
     private int chunkSize;
     private int maxSize;
     private int optWidth;
@@ -61,7 +61,7 @@ public class UploadConf {
 
     @Override
     public String toString() {
-        return "UploadConf{" +
+        return "UploadConfDTO{" +
                 "chunkSize=" + chunkSize +
                 ", maxSize=" + maxSize +
                 ", optWidth=" + optWidth +

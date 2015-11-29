@@ -14,18 +14,15 @@ import android.widget.Button;
 import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
-import com.shl.checkpin.android.jobs.ImagePrepareJob;
 import com.shl.checkpin.android.services.JobHolder;
 import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
-import com.path.android.jobqueue.JobManager;
-import com.path.android.jobqueue.config.Configuration;
-import com.path.android.jobqueue.log.CustomLogger;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
+import java.util.UUID;
 
 /**
  * Created by sesshoumaru on 19.09.15.
@@ -34,7 +31,8 @@ public class MainScreenActivity extends Activity {
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
     public static String TAG = "MainScreenActivity";
     private File picture = null;
-    private FileLocator fileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
+    //private FileLocator externalFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
+    private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
 
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
@@ -52,7 +50,8 @@ public class MainScreenActivity extends Activity {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            picture = fileLocator.locate(Environment.DIRECTORY_PICTURES, "test.png");
+            picture = appFileLocator.locate(Environment.DIRECTORY_PICTURES, UUID.randomUUID().toString() + ".jpg");
+            System.out.println(picture);
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(picture));
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }

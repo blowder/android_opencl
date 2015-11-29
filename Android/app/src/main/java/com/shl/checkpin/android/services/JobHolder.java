@@ -24,8 +24,8 @@ public class JobHolder {
         SENT
     }
 
-    private static ConcurrentHashMap<File, Status> jobs = new ConcurrentHashMap<>();
-    private static ConcurrentSkipListSet<File> jobsInProcess = new ConcurrentSkipListSet<>();
+    private static ConcurrentHashMap<File, Status> jobs = new ConcurrentHashMap<File, Status>();
+    private static ConcurrentSkipListSet<File> jobsInProcess = new ConcurrentSkipListSet<File>();
     private JobManager jobManager;
     private Context context;
 
