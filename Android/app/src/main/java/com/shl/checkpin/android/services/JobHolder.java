@@ -1,11 +1,14 @@
 package com.shl.checkpin.android.services;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import com.path.android.jobqueue.*;
 import com.path.android.jobqueue.config.Configuration;
 import com.shl.checkpin.android.jobs.ImagePrepareJob;
 import com.shl.checkpin.android.jobs.ImageUploadJob;
+import com.shl.checkpin.android.utils.Constants;
 
 import java.io.File;
 import java.util.Map;
@@ -17,7 +20,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
  */
 public class JobHolder {
 
-
     public enum Status {
         STARTED,
         PREPARED,
@@ -26,26 +28,28 @@ public class JobHolder {
 
     private static ConcurrentHashMap<File, Status> jobs = new ConcurrentHashMap<File, Status>();
     private static ConcurrentSkipListSet<File> jobsInProcess = new ConcurrentSkipListSet<File>();
+    private SharedPreferences sharedPreferences;
     private JobManager jobManager;
     private Context context;
 
     public JobHolder(Context context) {
         this.context = context;
         this.jobManager = buildJobManager(context);
+        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    public void addJob(File file) {
+    public void processImage(File file) {
         if (file.exists() && !jobs.containsKey(file)) {
             jobs.put(file, Status.STARTED);
             runJobs();
         }
     }
 
-    public void removeJob(File file) {
+    public static void removeJob(File file) {
         jobsInProcess.remove(file);
     }
 
-    public void clearJobList() {
+    public static void clearJobList() {
         jobsInProcess.clear();
     }
 
@@ -64,10 +68,13 @@ public class JobHolder {
 
     private void runJob(File file, Status status) {
         if (!Status.SENT.equals(status)) {
-            if (!Status.PREPARED.equals(status))
+            if (!Status.PREPARED.equals(status)) {
                 jobManager.addJob(new ImagePrepareJob(this, file));
-            //TODO test and fix upload
-            //jobManager.addJob(new ImageUploadJob(this, file, getPhoneNumber()));
+                if (sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
+                    String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
+                    jobManager.addJob(new ImageUploadJob(this, file, getPhoneNumber(), gcmToken));
+                }
+            }
         }
     }
 

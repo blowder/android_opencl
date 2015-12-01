@@ -22,12 +22,16 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 
 /**
  * Created by sesshoumaru on 19.09.15.
  */
 public class MainScreenActivity extends Activity {
+    DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss");
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
     public static String TAG = "MainScreenActivity";
     private File picture = null;
@@ -50,7 +54,7 @@ public class MainScreenActivity extends Activity {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            picture = appFileLocator.locate(Environment.DIRECTORY_PICTURES, UUID.randomUUID().toString() + ".jpg");
+            picture = appFileLocator.locate(Environment.DIRECTORY_PICTURES, dateFormat.format(new Date()) + ".png");
             System.out.println(picture);
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(picture));
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
@@ -62,13 +66,8 @@ public class MainScreenActivity extends Activity {
         //TODO add manipulation when we already have image file
         System.out.println("picture is " + picture);
         if (picture != null) {
-            new JobHolder(this).addJob(picture);
+            new JobHolder(this).processImage(picture);
         }
-    }
-
-    private String getPhoneIMEI() {
-        TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
-        return tMgr.getDeviceId();
     }
 
     @Override

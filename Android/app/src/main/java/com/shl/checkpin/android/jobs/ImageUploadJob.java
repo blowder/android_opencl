@@ -31,17 +31,16 @@ import java.util.Objects;
 public class ImageUploadJob extends Job {
     private static final String TAG= "ImageUploadJob";
     public static final int PRIORITY = 5;
-    DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss");
     private File image;
     private String phoneNumber;
     private String googleToken;
     private JobHolder jobHolder;
 
-    RestAdapter authRestAdapter = new RestAdapter.Builder()
+    private RestAdapter authRestAdapter = new RestAdapter.Builder()
             .setEndpoint(Constants.SERVER_HOST+":8080")
             .build();
 
-    RestAdapter uploadRestAdapter = new RestAdapter.Builder()
+    private RestAdapter uploadRestAdapter = new RestAdapter.Builder()
             .setEndpoint(Constants.SERVER_HOST)
             .build();
 
@@ -76,7 +75,7 @@ public class ImageUploadJob extends Job {
 
         //image upload
         byte[] fileInBytes = ByteStreams.toByteArray(new FileInputStream(image));
-        String filename = dateFormat.format(new Date());
+
         int chunkSize = uploadConf.getChunkSize();
         int chunksTotal = (int) Math.ceil((double) fileInBytes.length / chunkSize);
 
@@ -86,7 +85,7 @@ public class ImageUploadJob extends Job {
             for (int i = 0; i < fileInBytes.length; i = i + chunkSize) {
                 int leftLimit = i + chunkSize > fileInBytes.length ? fileInBytes.length : i + chunkSize;
                 byte[] data = Arrays.copyOfRange(fileInBytes, i, leftLimit);
-                TypedInput typedBytes = new TypedByteArrayWithFilename("multipart/form-data",  data, filename);
+                TypedInput typedBytes = new TypedByteArrayWithFilename("multipart/form-data",  data, image.getName());
                 uploadRestAdapter.create(UploadImageRequest.class).upload(uploadToken, chunkId, chunksTotal, typedBytes);
                 chunkId++;
             }
@@ -104,7 +103,6 @@ public class ImageUploadJob extends Job {
         }
         //job status set
         jobHolder.setStatus(image, JobHolder.Status.SENT);
-        jobHolder.removeJob(image);
     }
 
 
