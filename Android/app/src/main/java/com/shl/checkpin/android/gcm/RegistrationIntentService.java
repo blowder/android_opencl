@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 public class RegistrationIntentService extends IntentService {
     private static final String TAG = "RegIntentService";
-    private static final String[] TOPICS = {"global"};
+    private static final String[] TOPICS = {"global","upload"};
     private String projectNumber = "823127064363";
 
     public RegistrationIntentService() {
@@ -47,7 +47,7 @@ public class RegistrationIntentService extends IntentService {
             // sent to your server. If the boolean is false, send the token to your server,
             // otherwise your server should have already received the token.
             sharedPreferences.edit().putBoolean(Constants.SENT_TOKEN_TO_SERVER, true).apply();
-
+            sharedPreferences.edit().putString(Constants.GCM_TOKEN, token).apply();
 
         } catch (IOException e) {
             // If an exception happens while fetching the new token or updating our registration data
@@ -68,7 +68,7 @@ public class RegistrationIntentService extends IntentService {
 
     }
 
-    private void sendRegistrationToServer(String token){
+    private void sendRegistrationToServer(String token) {
         //TODO add retrofit send interface for send to BE
         System.out.println(token);
     }

@@ -62,7 +62,7 @@ public class MainScreenActivity extends Activity {
         //TODO add manipulation when we already have image file
         System.out.println("picture is " + picture);
         if (picture != null) {
-            new JobHolder(this).addJob(picture);
+            new JobHolder(this).processImage(picture);
         }
     }
 
