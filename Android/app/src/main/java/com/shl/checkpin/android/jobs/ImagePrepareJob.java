@@ -2,7 +2,6 @@ package com.shl.checkpin.android.jobs;
 
 import com.shl.checkpin.android.services.JobHolder;
 import com.shl.checkpin.android.utils.OpenCvUtils;
-import com.google.common.primitives.Doubles;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.Params;
 import org.opencv.core.Mat;
@@ -39,7 +38,12 @@ public class ImagePrepareJob extends Job {
         Collections.sort(rects, new Comparator<Rect>() {
             @Override
             public int compare(Rect lhs, Rect rhs) {
-                return Doubles.compare(rhs.area(), lhs.area());
+                if (rhs.area() < lhs.area())
+                    return -1;
+                else if (rhs.area() < lhs.area())
+                    return 1;
+                else
+                    return 0;
             }
         });
         try {

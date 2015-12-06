@@ -1,29 +1,21 @@
 package com.shl.checkpin.android.jobs;
 
 import android.util.Log;
-import com.google.common.base.Optional;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import com.shl.checkpin.android.dto.UploadConfDTO;
 import com.shl.checkpin.android.requests.*;
 import com.shl.checkpin.android.services.JobHolder;
 import com.shl.checkpin.android.utils.Constants;
-import com.google.common.io.Files;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.Params;
+import org.apache.commons.io.IOUtils;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
-import retrofit.client.Response;
 import retrofit.mime.TypedInput;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
 
 /**
  * Created by sesshoumaru on 16.11.15.
@@ -74,7 +66,7 @@ public class ImageUploadJob extends Job {
         UploadConfDTO uploadConf = conf.getConfiguration();
 
         //image upload
-        byte[] fileInBytes = ByteStreams.toByteArray(new FileInputStream(image));
+        byte[] fileInBytes = IOUtils.toByteArray(new FileInputStream(image));
 
         int chunkSize = uploadConf.getChunkSize();
         int chunksTotal = (int) Math.ceil((double) fileInBytes.length / chunkSize);
@@ -95,8 +87,8 @@ public class ImageUploadJob extends Job {
                     &&e.getResponse().getBody()!=null
                     &&e.getResponse().getBody().in()!=null){
                 InputStream is = e.getResponse().getBody().in();
-                Log.d(TAG, new String(ByteStreams.toByteArray(is)));
-                Closeables.closeQuietly(is);
+                Log.d(TAG, new String(IOUtils.toByteArray(is)));
+                is.close();
             }else{
                 Log.e(TAG,"Unexpected error occurred ", e);
             }

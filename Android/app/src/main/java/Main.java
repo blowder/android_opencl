@@ -1,11 +1,9 @@
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import com.shl.checkpin.android.dto.UploadConfDTO;
 import com.shl.checkpin.android.requests.*;
 import com.shl.checkpin.android.utils.Constants;
+import org.apache.commons.io.IOUtils;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
-import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 
 import java.io.File;
@@ -44,7 +42,7 @@ public class Main {
         System.out.println(conf.getConfiguration());
         //send
         //byte[] fileInBytes = Files.toByteArray(image);
-        byte[] fileInBytes = ByteStreams.toByteArray(new FileInputStream(image));
+        byte[] fileInBytes = IOUtils.toByteArray(new FileInputStream(image));
         int chunkSize = uploadConf.getChunkSize();
         int chunksTotal = (int) Math.ceil(fileInBytes.length / (double)chunkSize);
 
@@ -66,7 +64,7 @@ public class Main {
             System.out.println("Transferred data " + dataSize);
         }catch (RetrofitError e ){
             System.out.println(e.getResponse().getStatus());
-                System.out.println(new String(ByteStreams.toByteArray(e.getResponse().getBody().in())));
+                System.out.println(new String(IOUtils.toByteArray(e.getResponse().getBody().in())));
         }
 
     }
