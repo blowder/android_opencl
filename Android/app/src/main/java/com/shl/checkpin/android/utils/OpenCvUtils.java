@@ -5,15 +5,48 @@ import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by sesshoumaru on 9/13/15.
  */
 public class OpenCvUtils {
+    public static Mat getHoughLines(Mat source) {
+        Mat lines = new Mat();
+        int threshold = 150;
+        int minLineSize = 100;
+        int lineGap = 50;
+
+        Imgproc.cvtColor(source, source, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.HoughLinesP(source, lines, 1, Math.PI / 180, threshold, minLineSize, lineGap);
+
+        return lines;
+    }
+
+    public static Map<Integer, Integer> detectMostPossibleRotationAngle(Mat source) {
+        Mat temp = new Mat();
+        Core.bitwise_not(source, temp);
+        Map<Integer, Integer> anglesCount = new HashMap<Integer, Integer>();
+        Mat lines = getHoughLines(temp);
+        for (int x = 0; x < lines.cols(); x++) {
+            double[] vec = lines.get(0, x);
+
+            double angle = Math.atan2(vec[3] - vec[1], vec[2] - vec[0]);
+            int angleInDegrees = (int) Math.round(angle * 180 / Math.PI);
+            if (anglesCount.get(angleInDegrees) != null)
+                anglesCount.put(angleInDegrees, anglesCount.get(angleInDegrees) + 1);
+            else
+                anglesCount.put(angleInDegrees, 0);
+        }
+        return anglesCount;
+    }
+
+    public static void rotate(Mat source, Mat target, double degreeAngle) {
+        int len = Math.max(source.cols(), source.rows());
+        Mat rotationMat = Imgproc.getRotationMatrix2D(new Point(len / 2, len / 2), degreeAngle, 1);
+        Imgproc.warpAffine(source, target, rotationMat, new Size(len, len));
+    }
+
     public static void sharpen(File source, File target) {
         Mat opencvSource = Highgui.imread(source.getAbsolutePath());
         Mat temp = new Mat();
