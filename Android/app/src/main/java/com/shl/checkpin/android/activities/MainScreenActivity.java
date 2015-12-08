@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
+import com.shl.checkpin.android.gcm.RegistrationIntentService;
 import com.shl.checkpin.android.services.JobHolder;
 import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
@@ -31,7 +32,7 @@ import java.util.UUID;
  * Created by sesshoumaru on 19.09.15.
  */
 public class MainScreenActivity extends Activity {
-    DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss");
+    DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
     public static String TAG = "MainScreenActivity";
     private File picture = null;
@@ -75,6 +76,7 @@ public class MainScreenActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_screen);
         startService(new Intent(this, MyInstanceIDListenerService.class));
+        startService(new Intent(this, RegistrationIntentService.class));
         addListenersForButtons();
     }
 

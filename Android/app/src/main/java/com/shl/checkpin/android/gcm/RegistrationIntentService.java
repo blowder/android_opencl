@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 public class RegistrationIntentService extends IntentService {
     private static final String TAG = "RegIntentService";
-    private static final String[] TOPICS = {"global","upload"};
+    private static final String[] TOPICS = {"global", "upload"};
     private String projectNumber = "823127064363";
 
     public RegistrationIntentService() {
@@ -39,8 +39,9 @@ public class RegistrationIntentService extends IntentService {
             InstanceID instanceID = InstanceID.getInstance(this);
             String token = instanceID.getToken(projectNumber,
                     GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+            Log.i(TAG, "Service was registered with token" + token);
             // [END get_token]
-           // sendRegistrationToServer(token);
+            // sendRegistrationToServer(token);
             // Subscribe to topic channels
             subscribeTopics(token);
             // You should store a boolean that indicates whether the generated token has been
