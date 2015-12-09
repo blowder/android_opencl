@@ -3,9 +3,11 @@ package com.shl.checkpin.android.activities;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -15,7 +17,10 @@ import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
 import com.shl.checkpin.android.gcm.RegistrationIntentService;
+import com.shl.checkpin.android.jobs.ImageUploadJob;
+import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.services.JobHolder;
+import com.shl.checkpin.android.utils.Constants;
 import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
 import org.opencv.android.BaseLoaderCallback;
@@ -23,6 +28,7 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -66,9 +72,17 @@ public class MainScreenActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //TODO add manipulation when we already have image file
         System.out.println("picture is " + picture);
-        if (picture != null) {
-            new JobHolder(this).processImage(picture);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if (picture != null && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
+            String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
+            new ImageUploadTask(this, getPhoneNumber(), gcmToken).execute(picture);
         }
+    }
+
+
+    private String getPhoneNumber() {
+        TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        return tMgr.getLine1Number();
     }
 
     @Override
