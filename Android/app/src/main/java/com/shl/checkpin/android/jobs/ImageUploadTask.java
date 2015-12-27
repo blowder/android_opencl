@@ -35,13 +35,15 @@ public class ImageUploadTask extends AsyncTask<File, Void, Boolean> {
             .setEndpoint(Constants.SERVER_HOST)
             .build();
 
-       public ImageUploadTask(Context context, String phoneNumber, String googleToken) {
+    public ImageUploadTask(Context context, String phoneNumber, String googleToken) {
         this.context = context;
         this.phoneNumber = phoneNumber;
         this.googleToken = googleToken;
     }
 
-    private void upload(File image) throws IOException {
+    private boolean upload(File image) throws IOException {
+        if (!image.exists())
+            return false;
         FileInputStream fis = new FileInputStream(image);
         byte[] fileBytes = IOUtils.toByteArray(fis);
         Bitmap imageBitmap = BitmapFactory.decodeByteArray(fileBytes, 0, fileBytes.length);
@@ -83,6 +85,7 @@ public class ImageUploadTask extends AsyncTask<File, Void, Boolean> {
                 chunkId++;
             }
             Log.i(TAG, "File " + image + " was uploaded");
+            return true;
         } catch (RetrofitError e) {
             if (e.getResponse() != null
                     && e.getResponse().getBody() != null
@@ -94,23 +97,25 @@ public class ImageUploadTask extends AsyncTask<File, Void, Boolean> {
                 Log.e(TAG, "Unexpected error occurred ", e);
             }
         }
+        return false;
     }
 
     @Override
     protected Boolean doInBackground(File... params) {
         try {
-            upload(params[0]);
+            return upload(params[0]);
         } catch (IOException e) {
             return false;
         }
-        return true;
     }
 
     @Override
     protected void onPostExecute(Boolean result) {
-        CharSequence text = "Image was sent!!!";
-        int duration = Toast.LENGTH_SHORT;
-        Toast toast = Toast.makeText(context, text, duration);
-        toast.show();
+        if (result) {
+            CharSequence text = "Image was sent!!!";
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
+        }
     }
 }

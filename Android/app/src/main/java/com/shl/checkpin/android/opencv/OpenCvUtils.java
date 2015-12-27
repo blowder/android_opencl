@@ -1,4 +1,4 @@
-package com.shl.checkpin.android.utils;
+package com.shl.checkpin.android.opencv;
 
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
@@ -11,34 +11,46 @@ import java.util.*;
  * Created by sesshoumaru on 9/13/15.
  */
 public class OpenCvUtils {
+    //need adaptive threshold of canny for work
     public static Mat getHoughLines(Mat source) {
         Mat lines = new Mat();
         int threshold = 150;
         int minLineSize = 100;
         int lineGap = 50;
-
-        Imgproc.cvtColor(source, source, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.HoughLinesP(source, lines, 1, Math.PI / 180, threshold, minLineSize, lineGap);
-
+        Mat inverted = new Mat();
+        if (source.type() != CvType.CV_8UC1)
+            Imgproc.cvtColor(source, source, Imgproc.COLOR_BGR2GRAY);
+        Core.bitwise_not(source, inverted);
+        Imgproc.HoughLinesP(inverted, lines, 1, Math.PI / 180, threshold, minLineSize, lineGap);
         return lines;
     }
 
-    public static Map<Integer, Integer> detectMostPossibleRotationAngle(Mat source) {
-        Mat temp = new Mat();
-        Core.bitwise_not(source, temp);
-        Map<Integer, Integer> anglesCount = new HashMap<Integer, Integer>();
-        Mat lines = getHoughLines(temp);
+    public static Mat denoise(Mat source, Size maxNoiseSize) {
+        Mat result = new Mat();
+        Mat kernel = new Mat(maxNoiseSize, CvType.CV_8UC1, new Scalar(255));
+        Imgproc.morphologyEx(source, result, Imgproc.MORPH_OPEN, kernel);
+        Imgproc.morphologyEx(result, result, Imgproc.MORPH_CLOSE, kernel);
+        return result;
+    }
+
+    public static Mat resize(Mat source, int width) {
+        Mat result = new Mat();
+        int divider = Math.max(source.cols(), source.rows()) / width;
+        Size size = new Size(source.cols() / divider, source.rows() / divider);
+        Imgproc.resize(source, result, size);
+        return result;
+    }
+
+    public static Map<Integer, Integer> calculateAnglesQuantity(Mat lines) {
+        Map<Integer, Integer> result = new HashMap<Integer, Integer>();
         for (int x = 0; x < lines.cols(); x++) {
             double[] vec = lines.get(0, x);
-
             double angle = Math.atan2(vec[3] - vec[1], vec[2] - vec[0]);
             int angleInDegrees = (int) Math.round(angle * 180 / Math.PI);
-            if (anglesCount.get(angleInDegrees) != null)
-                anglesCount.put(angleInDegrees, anglesCount.get(angleInDegrees) + 1);
-            else
-                anglesCount.put(angleInDegrees, 0);
+            int quantity = result.get(angleInDegrees) != null ? result.get(angleInDegrees) : 0;
+            result.put(angleInDegrees, quantity + 1);
         }
-        return anglesCount;
+        return result;
     }
 
     public static void rotate(Mat source, Mat target, double degreeAngle) {
@@ -55,21 +67,13 @@ public class OpenCvUtils {
         Highgui.imwrite(target.getAbsolutePath(), temp);
     }
 
-    public static Mat cropByRect(Mat image, Rect rect) {
-        return image.submat(rect.y, rect.y + rect.height, rect.x, rect.x + rect.width);
-    }
 
-    public static boolean ifContainText(Mat image) {
-        List<Rect> result = detectLetters(image);
-        return result.size() != 0;
-    }
-
-    public static void adaptiveThreshold(File source, File target) {
-        Mat opencvSource = Highgui.imread(source.getAbsolutePath());
-        Mat temp = new Mat();
-        Imgproc.cvtColor(opencvSource, temp, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.adaptiveThreshold(temp, temp, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 8);
-        Highgui.imwrite(target.getAbsolutePath(), temp);
+    public static Mat adaptiveThreshold(Mat source) {
+        Mat result = new Mat();
+        if (source.type() != CvType.CV_8UC1)
+            Imgproc.cvtColor(source, result, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.adaptiveThreshold(result, result, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 21, 10);
+        return result;
     }
 
     public static void convexHull(File source, File target) {
@@ -94,27 +98,42 @@ public class OpenCvUtils {
             }
         }
 
-        /*for cnt in contours:
-        if cv2.contourArea(cnt)>5000:  # remove small areas like noise etc
-        hull = cv2.convexHull(cnt)    # find the convex hull of contour
-        hull = cv2.approxPolyDP(hull,0.1*cv2.arcLength(hull,True),True)
-        if len(hull)==4:
-        cv2.drawContours(img,[hull],0,(0,255,0),2)
-
-        cv2.imshow('img',img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()*/
     }
 
-    public static MatOfFloat convert(MatOfInt matOfInt) {
-        return new MatOfFloat(matOfInt);
+    public static List<Rect> detectLetters2(Mat img) {
+        List<Rect> boundRect = new ArrayList<Rect>();
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
+        Mat result = img.clone();
+
+        if (result.type() != CvType.CV_8UC1)
+            Imgproc.cvtColor(result, result, Imgproc.COLOR_BGR2GRAY);
+
+        Imgproc.morphologyEx(result, result, Imgproc.MORPH_GRADIENT, element);
+        Imgproc.threshold(result, result, 0, 255, Imgproc.THRESH_OTSU + Imgproc.THRESH_BINARY);
+
+        element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 1));
+        Imgproc.morphologyEx(result, result, Imgproc.MORPH_CLOSE, element);
+
+        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        Imgproc.findContours(result, contours, result, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        for (MatOfPoint contour : contours) {
+            MatOfPoint2f tempContour = new MatOfPoint2f();
+            Imgproc.approxPolyDP(new MatOfPoint2f(contour.toArray()), tempContour, 3, true);
+            Rect appRect = Imgproc.boundingRect(new MatOfPoint(tempContour.toArray()));
+            if (appRect.width > appRect.height)
+                boundRect.add(appRect);
+        }
+        return boundRect;
     }
 
+    @Deprecated
     public static List<Rect> detectLetters(Mat img) {
         //Mat img = Highgui.imread(source.getAbsolutePath());
         List<Rect> boundRect = new ArrayList<Rect>();
-        Mat img_gray = new Mat(), img_sobel = new Mat(), img_threshold = new Mat(), element;
-        Imgproc.cvtColor(img, img_gray, Imgproc.COLOR_BGR2GRAY);
+        Mat img_gray = img.clone(), img_sobel = new Mat(), img_threshold = new Mat(), element;
+        if (img_gray.type() != CvType.CV_8UC1)
+            Imgproc.cvtColor(img_gray, img_gray, Imgproc.COLOR_BGR2GRAY);
         //Imgproc.Sobel(img_gray,img_sobel, img_gray.depth(), 1, 0);
         Imgproc.Sobel(img_gray, img_sobel, img_gray.depth(), 1, 0, 3, 1, 0, Imgproc.BORDER_DEFAULT);
         //cv::Sobel(img_gray, img_sobel, CV_8U, 1, 0, 3, 1, 0, cv::BORDER_DEFAULT);
@@ -138,6 +157,7 @@ public class OpenCvUtils {
             if (appRect.width > appRect.height)
                 boundRect.add(appRect);
             //}
+
         }
         return boundRect;
     }
@@ -251,6 +271,11 @@ public class OpenCvUtils {
         return (dx1 * dx2 + dy1 * dy2) / Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-10);
     }
 
+    public static Mat erode(Mat source) {
+        Mat result = new Mat();
+        int size = Math.max(source.rows(), source.cols()) / 100;
+        size = size == 0 ? 1 : size;
+        Imgproc.erode(source, result, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(size, size)));
+        return result;
+    }
 }
-
-

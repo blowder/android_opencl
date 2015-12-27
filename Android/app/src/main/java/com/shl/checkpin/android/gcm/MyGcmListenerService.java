@@ -7,13 +7,11 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import com.google.android.gms.gcm.GcmListenerService;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.activities.MainScreenActivity;
-import com.shl.checkpin.android.services.JobHolder;
 import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
 

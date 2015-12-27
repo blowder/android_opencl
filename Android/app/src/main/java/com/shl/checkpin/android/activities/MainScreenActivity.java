@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -17,9 +18,8 @@ import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
 import com.shl.checkpin.android.gcm.RegistrationIntentService;
-import com.shl.checkpin.android.jobs.ImageUploadJob;
+import com.shl.checkpin.android.jobs.ImagePrepareTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
-import com.shl.checkpin.android.services.JobHolder;
 import com.shl.checkpin.android.utils.Constants;
 import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
@@ -28,11 +28,9 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.UUID;
 
 /**
  * Created by sesshoumaru on 19.09.15.
@@ -75,7 +73,8 @@ public class MainScreenActivity extends Activity {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (picture != null && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
             String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
-            new ImageUploadTask(this, getPhoneNumber(), gcmToken).execute(picture);
+            new ImagePrepareTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
+            new ImageUploadTask(this, getPhoneNumber(), gcmToken).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
         }
     }
 
