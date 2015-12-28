@@ -34,6 +34,7 @@ public class MyGcmListenerService extends GcmListenerService {
             JobHolder.removeJob(appFileLocator.locate(Environment.DIRECTORY_PICTURES, filename));
         }*/
     }
+
     private void sendNotification(String message) {
         Intent intent = new Intent(this, MainScreenActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

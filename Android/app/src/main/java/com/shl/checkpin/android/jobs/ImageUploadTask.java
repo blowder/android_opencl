@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 import com.shl.checkpin.android.dto.UploadConfDTO;
+import com.shl.checkpin.android.opencv.ImageProcessingService;
 import com.shl.checkpin.android.requests.*;
 import com.shl.checkpin.android.utils.Constants;
 import org.apache.commons.io.IOUtils;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by sesshoumaru on 09.12.15.
  */
-public class ImageUploadTask extends AsyncTask<File, Void, Boolean> {
+public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
     private static final String TAG = "ImageUploadTask";
     private final Context context;
     private String phoneNumber;
@@ -42,8 +43,11 @@ public class ImageUploadTask extends AsyncTask<File, Void, Boolean> {
     }
 
     private boolean upload(File image) throws IOException {
+
         if (!image.exists())
             return false;
+        new ImageProcessingService().resize(image, image, 600, 2000);
+        /*
         FileInputStream fis = new FileInputStream(image);
         byte[] fileBytes = IOUtils.toByteArray(fis);
         Bitmap imageBitmap = BitmapFactory.decodeByteArray(fileBytes, 0, fileBytes.length);
@@ -51,32 +55,31 @@ public class ImageUploadTask extends AsyncTask<File, Void, Boolean> {
         FileOutputStream fos = new FileOutputStream(image);
         imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
         fis.close();
-        fos.close();
-
-        //authorization and registration
-        UploadTokenRequest uploadTokenRequest = authRestAdapter.create(UploadTokenRequest.class);
-        phoneNumber = phoneNumber.replace("+", "");
-        String uploadToken = uploadTokenRequest.get(phoneNumber).getToken();
-
-        GcmRegisterRequest gcmRegisterRequest = authRestAdapter.create(GcmRegisterRequest.class);
-        int responseCode = gcmRegisterRequest.register(uploadToken, googleToken).getStatus();
-        Log.i(TAG, responseCode == 200
-                ? "User with number" + phoneNumber + " was register on upload service"
-                : "Error during registration of " + phoneNumber + " occurred ");
-
-        //get configuration
-        UploadConfigurationRequest conf = uploadRestAdapter.create(UploadConfigurationRequest.class);
-        UploadConfDTO uploadConf = conf.getConfiguration();
-
-        //image upload
-        byte[] fileInBytes = IOUtils.toByteArray(new FileInputStream(image));
-
-        int chunkSize = uploadConf.getChunkSize();
-        int chunksTotal = (int) Math.ceil((double) fileInBytes.length / chunkSize);
-
-        int chunkId = 1;
-
+        fos.close();*/
         try {
+            //authorization and registration
+            UploadTokenRequest uploadTokenRequest = authRestAdapter.create(UploadTokenRequest.class);
+            phoneNumber = phoneNumber.replace("+", "");
+            String uploadToken = uploadTokenRequest.get(phoneNumber).getToken();
+
+            GcmRegisterRequest gcmRegisterRequest = authRestAdapter.create(GcmRegisterRequest.class);
+            int responseCode = gcmRegisterRequest.register(uploadToken, googleToken).getStatus();
+            Log.i(TAG, responseCode == 200
+                    ? "User with number" + phoneNumber + " was register on upload service"
+                    : "Error during registration of " + phoneNumber + " occurred ");
+
+            //get configuration
+            UploadConfigurationRequest conf = uploadRestAdapter.create(UploadConfigurationRequest.class);
+            UploadConfDTO uploadConf = conf.getConfiguration();
+
+            //image upload
+            byte[] fileInBytes = IOUtils.toByteArray(new FileInputStream(image));
+
+            int chunkSize = uploadConf.getChunkSize();
+            int chunksTotal = (int) Math.ceil((double) fileInBytes.length / chunkSize);
+
+            int chunkId = 1;
+
             for (int i = 0; i < fileInBytes.length; i = i + chunkSize) {
                 int leftLimit = i + chunkSize > fileInBytes.length ? fileInBytes.length : i + chunkSize;
                 byte[] data = Arrays.copyOfRange(fileInBytes, i, leftLimit);
@@ -86,18 +89,30 @@ public class ImageUploadTask extends AsyncTask<File, Void, Boolean> {
             }
             Log.i(TAG, "File " + image + " was uploaded");
             return true;
-        } catch (RetrofitError e) {
-            if (e.getResponse() != null
-                    && e.getResponse().getBody() != null
-                    && e.getResponse().getBody().in() != null) {
-                InputStream is = e.getResponse().getBody().in();
-                Log.e(TAG, new String(IOUtils.toByteArray(is)));
-                is.close();
+        } catch (Exception e) {
+            String message = null;
+            if (e instanceof RetrofitError) {
+                RetrofitError error = (RetrofitError) e;
+                if (error.getResponse() != null
+                        && error.getResponse().getBody() != null
+                        && error.getResponse().getBody().in() != null) {
+                    InputStream is = error.getResponse().getBody().in();
+                    message = new String(IOUtils.toByteArray(is));
+                    Log.e(TAG, message);
+                    is.close();
+                }
             } else {
                 Log.e(TAG, "Unexpected error occurred ", e);
             }
+            CharSequence text = "Internal error during upload!\n " + (message != null ? message : e.getMessage());
+            publishProgress(text.toString());
         }
         return false;
+    }
+
+    @Override
+    protected void onProgressUpdate(String... message) {
+        Toast.makeText(context, (message != null && message.length != 0 ? message[0] : ""), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -113,7 +128,7 @@ public class ImageUploadTask extends AsyncTask<File, Void, Boolean> {
     protected void onPostExecute(Boolean result) {
         if (result) {
             CharSequence text = "Image was sent!!!";
-            int duration = Toast.LENGTH_SHORT;
+            int duration = Toast.LENGTH_LONG;
             Toast toast = Toast.makeText(context, text, duration);
             toast.show();
         }

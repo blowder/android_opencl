@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -66,15 +68,29 @@ public class MainScreenActivity extends Activity {
         }
     };
 
+    boolean isInetConnected() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) this.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo i = connectivityManager.getActiveNetworkInfo();
+        return i != null && i.isConnected() && i.isAvailable();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //TODO add manipulation when we already have image file
         System.out.println("picture is " + picture);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (picture != null && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
-            String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
+        if (picture != null)
             new ImagePrepareTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
+        if (picture != null && isInetConnected()
+                && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
+            String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
             new ImageUploadTask(this, getPhoneNumber(), gcmToken).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
+        } else {
+            Context context = getApplicationContext();
+            CharSequence text = "Sorry you need internet connection for send bill for analyze!";
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
         }
     }
 

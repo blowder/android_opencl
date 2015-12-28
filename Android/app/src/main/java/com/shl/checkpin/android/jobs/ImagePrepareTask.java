@@ -40,6 +40,7 @@ public class ImagePrepareTask extends AsyncTask<File, Void, Boolean> {
             toast.show();
         }
         if (!result) {
+            //TODO: delete file if not check
             CharSequence text = "Sorry, we could not detect bill on this image, try photograph again!";
             int duration = Toast.LENGTH_SHORT;
             Toast toast = Toast.makeText(context, text, duration);

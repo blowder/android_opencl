@@ -69,7 +69,7 @@ public class OpenCvUtils {
 
 
     public static Mat adaptiveThreshold(Mat source) {
-        Mat result = new Mat();
+        Mat result = source.clone();
         if (source.type() != CvType.CV_8UC1)
             Imgproc.cvtColor(source, result, Imgproc.COLOR_BGR2GRAY);
         Imgproc.adaptiveThreshold(result, result, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 21, 10);
