@@ -1,25 +1,39 @@
 package com.shl.checkpin.android.jobs;
 
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.Point;
+import android.media.ExifInterface;
 import android.os.AsyncTask;
+import android.os.Environment;
+import android.util.Log;
 import android.widget.Toast;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
+import com.shl.checkpin.android.utils.AndroidUtils;
+import com.shl.checkpin.android.utils.FSFileLocator;
+import com.shl.checkpin.android.utils.FileLocator;
+import com.shl.checkpin.android.utils.FileType;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by sesshoumaru on 25.12.15.
  */
-public class ImagePrepareTask extends AsyncTask<File, Void, Boolean> {
-    private final Context context;
-    ImageProcessingService processingService = new ImageProcessingService();
+public class ImageFilterTask extends AsyncTask<File, Void, Boolean> {
 
-    public ImagePrepareTask(Context context) {
+    private final Activity context;
+    ImageProcessingService processingService = new ImageProcessingService();
+    private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
+
+    public ImageFilterTask(Activity context) {
         this.context = context;
     }
 
     @Override
     protected Boolean doInBackground(File... params) {
+        if (params == null || params.length == 0)
+            return false;
         return prepare(params[0]);
     }
 
@@ -47,4 +61,6 @@ public class ImagePrepareTask extends AsyncTask<File, Void, Boolean> {
             toast.show();
         }
     }
+
+
 }
