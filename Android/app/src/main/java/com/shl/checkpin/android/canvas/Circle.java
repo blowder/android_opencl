@@ -3,6 +3,7 @@ package com.shl.checkpin.android.canvas;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 
 /**
  * Created by sesshoumaru on 02.01.16.
@@ -72,6 +73,12 @@ public class Circle {
 
     public void draw(Canvas canvas) {
         canvas.drawCircle(x, y, radius, paint);
+    }
+
+    public double distanceTo(Circle circle) {
+        double x = this.x - circle.getX();
+        double y = this.y - circle.getY();
+        return Math.sqrt(x * x + y * y);
     }
 
     @Override

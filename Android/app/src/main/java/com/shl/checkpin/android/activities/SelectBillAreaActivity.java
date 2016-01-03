@@ -9,7 +9,6 @@ import android.os.Environment;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.canvas.CanvasView;
 import com.shl.checkpin.android.canvas.Circle;
@@ -18,8 +17,12 @@ import com.shl.checkpin.android.opencv.OpenCvUtils;
 import com.shl.checkpin.android.utils.AndroidUtils;
 import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
+import com.shl.checkpin.android.utils.FileType;
 import org.opencv.core.Size;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +37,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
     private int canvasHeight;
     private Button finishButton;
     Bitmap image;
+    File thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, fileName);
 
     private int threshold = 50;
     private int circleRadius = 30;
@@ -42,7 +46,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
     private View.OnClickListener finishButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            new ImageBillCutOutTask(getApplicationContext())
+            new ImageBillCutOutTask(getApplicationContext(), thumbnail)
                     .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, circles.toArray(new Circle[circles.size()]));
             finish();
         }
@@ -62,10 +66,10 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         br.setNext(bl);
         bl.setNext(tl);
 
+        circles.add(tl);
         circles.add(tr);
         circles.add(br);
         circles.add(bl);
-        circles.add(tl);
     }
 
     @Override
@@ -89,6 +93,11 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         image = BitmapFactory.decodeFile(appFileLocator.locate(Environment.DIRECTORY_PICTURES, fileName).getAbsolutePath());
         Size dimension = OpenCvUtils.getScaledDimension(new Size(image.getWidth(), image.getHeight()), new Size(canvasWidth, canvasHeight));
         image = Bitmap.createScaledBitmap(image, (int) dimension.width, (int) dimension.height, true);
+        try {
+            image.compress(Bitmap.CompressFormat.PNG, 100, new FileOutputStream(thumbnail));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initScreenDimension() {
