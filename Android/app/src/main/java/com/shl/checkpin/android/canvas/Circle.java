@@ -12,7 +12,6 @@ public class Circle {
     float y;
     float radius;
     Paint paint;
-    Paint linePaint;
     Circle next;
 
     public Circle(float x, float y, float radius) {
@@ -22,9 +21,6 @@ public class Circle {
         this.paint = new Paint();
         paint.setColor(Color.GRAY);
         paint.setStyle(Paint.Style.FILL);
-        this.linePaint = new Paint();
-        linePaint.setColor(Color.BLACK);
-        linePaint.setStrokeWidth(5);
     }
 
     public Circle(float x, float y, float radius, Paint paint) {
@@ -75,8 +71,6 @@ public class Circle {
     }
 
     public void draw(Canvas canvas) {
-        if (next != null)
-            canvas.drawLine(x, y, next.getX(), next.getY(), linePaint);
         canvas.drawCircle(x, y, radius, paint);
     }
 }
