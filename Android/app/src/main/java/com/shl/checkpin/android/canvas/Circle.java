@@ -73,4 +73,13 @@ public class Circle {
     public void draw(Canvas canvas) {
         canvas.drawCircle(x, y, radius, paint);
     }
+
+    @Override
+    public String toString() {
+        return "Circle{" +
+                "x=" + x +
+                ", y=" + y +
+                ", radius=" + radius +
+                '}';
+    }
 }

@@ -1,14 +1,19 @@
 package com.shl.checkpin.android.activities;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.*;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.canvas.CanvasView;
 import com.shl.checkpin.android.canvas.Circle;
+import com.shl.checkpin.android.jobs.ImageBillCutOutTask;
 import com.shl.checkpin.android.opencv.OpenCvUtils;
 import com.shl.checkpin.android.utils.AndroidUtils;
 import com.shl.checkpin.android.utils.FSFileLocator;
@@ -27,11 +32,21 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
     private CanvasView drawView = null;
     private int canvasWidth;
     private int canvasHeight;
+    private Button finishButton;
     Bitmap image;
 
     private int threshold = 50;
     private int circleRadius = 30;
     List<Circle> circles = new ArrayList<Circle>();
+
+    private View.OnClickListener finishButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            new ImageBillCutOutTask(getApplicationContext())
+                    .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, circles.toArray(new Circle[circles.size()]));
+            finish();
+        }
+    };
 
     private void initCircles() {
         initScreenDimension();
@@ -60,6 +75,9 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
 
         initCircles();
         initBackground();
+
+        finishButton = (Button) findViewById(R.id.finishButton);
+        finishButton.setOnClickListener(finishButtonListener);
 
         drawView = (CanvasView) findViewById(R.id.canvasView);
         drawView.setBackgroundImage(image);

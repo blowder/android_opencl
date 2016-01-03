@@ -8,9 +8,11 @@
           android:layout_height="fill_parent"
           class="com.shl.checkpin.android.canvas.CanvasView" android:id="@+id/canvasView"/>
     <Button
+            android:id="@+id/finishButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Press me"
-            android:id="@+id/pressMe" android:layout_gravity="center_horizontal" android:layout_alignParentBottom="true"
+            android:text="Finish"
+            android:layout_gravity="center_horizontal"
+            android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"/>
 </RelativeLayout>
