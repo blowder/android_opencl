@@ -9,6 +9,8 @@ import java.io.File;
 public interface FileLocator {
     File locate(String context, String name);
 
+    File locate(String context, FileType type, String name);
+
     File getRoot();
 
     boolean isStorageWritable();

@@ -28,6 +28,13 @@ public class FSFileLocator implements FileLocator {
     }
 
     @Override
+    public File locate(String context, FileType type, String name) {
+        return new File(getRoot().getAbsolutePath()
+                + (context != null ? File.separator + context : "")
+                + File.separator + name + type);
+    }
+
+    @Override
     public File getRoot() {
         switch (storageType) {
             case APPLICATION:

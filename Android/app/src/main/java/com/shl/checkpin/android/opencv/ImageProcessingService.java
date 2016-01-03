@@ -27,7 +27,14 @@ public class ImageProcessingService {
         int skewAngle = getMostPopularAngle(filteredAngles);
 
         Mat origin = Highgui.imread(source.getAbsolutePath());
-        OpenCvUtils.rotate(origin, origin, skewAngle);
+        OpenCvUtils.rotate(origin, origin, -skewAngle);
+        Highgui.imwrite(target.getAbsolutePath(), origin);
+        return target;
+    }
+
+    public File rotate(File source, File target, double degrease) {
+        Mat origin = Highgui.imread(source.getAbsolutePath());
+        OpenCvUtils.rotate(origin, origin, degrease);
         Highgui.imwrite(target.getAbsolutePath(), origin);
         return target;
     }
@@ -115,39 +122,12 @@ public class ImageProcessingService {
 
     public File resize(File source, File target, int width, int height) {
         Mat temp = Highgui.imread(source.getAbsolutePath());
-        Size newSize = getScaledDimension(temp.size(), new Size(width, height));
+        Size newSize = OpenCvUtils.getScaledDimension(temp.size(), new Size(width, height));
         Imgproc.resize(temp, temp, newSize);
         Highgui.imwrite(target.getAbsolutePath(), temp);
         return target;
     }
 
-    public Size getScaledDimension(Size imgSize, Size boundary) {
-
-        double original_width = imgSize.width;
-        double original_height = imgSize.height;
-        double bound_width = boundary.width;
-        double bound_height = boundary.height;
-        double new_width = original_width;
-        double new_height = original_height;
-
-        // first check if we need to scale width
-        if (original_width > bound_width) {
-            //scale width to fit
-            new_width = bound_width;
-            //scale height to maintain aspect ratio
-            new_height = (new_width * original_height) / original_width;
-        }
-
-        // then check if we need to scale even with the new height
-        if (new_height > bound_height) {
-            //scale height to fit instead
-            new_height = bound_height;
-            //scale width to maintain aspect ratio
-            new_width = (new_height * original_width) / original_height;
-        }
-
-        return new Size(new_width, new_height);
-    }
 
     @Deprecated
     public File prepareForSend2(File source, File target) {

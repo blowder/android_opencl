@@ -53,10 +53,45 @@ public class OpenCvUtils {
         return result;
     }
 
+    public static Size getScaledDimension(Size imgSize, Size boundary) {
+
+        double original_width = imgSize.width;
+        double original_height = imgSize.height;
+        double bound_width = boundary.width;
+        double bound_height = boundary.height;
+        double new_width = original_width;
+        double new_height = original_height;
+
+        // first check if we need to scale width
+        if (original_width > bound_width) {
+            //scale width to fit
+            new_width = bound_width;
+            //scale height to maintain aspect ratio
+            new_height = (new_width * original_height) / original_width;
+        }
+
+        // then check if we need to scale even with the new height
+        if (new_height > bound_height) {
+            //scale height to fit instead
+            new_height = bound_height;
+            //scale width to maintain aspect ratio
+            new_width = (new_height * original_width) / original_height;
+        }
+
+        return new Size(new_width, new_height);
+    }
+
     public static void rotate(Mat source, Mat target, double degreeAngle) {
-        int len = Math.max(source.cols(), source.rows());
-        Mat rotationMat = Imgproc.getRotationMatrix2D(new Point(len / 2, len / 2), degreeAngle, 1);
-        Imgproc.warpAffine(source, target, rotationMat, new Size(len, len));
+        Point center = new Point(source.cols() / 2, source.rows() / 2);
+        Rect bb = new RotatedRect(center, source.size(), -degreeAngle).boundingRect();
+
+        Mat rotationMat = Imgproc.getRotationMatrix2D(center, -degreeAngle, 1);
+        double rotationFixX = rotationMat.get(0, 2)[0] + bb.width / 2 - center.x;
+        double rotationFixY = rotationMat.get(1, 2)[0] + bb.height / 2 - center.y;
+        rotationMat.put(0, 2, rotationFixX);
+        rotationMat.put(1, 2, rotationFixY);
+
+        Imgproc.warpAffine(source, target, rotationMat, new Size(bb.width, bb.height));
     }
 
     public static void sharpen(File source, File target) {

@@ -21,7 +21,7 @@
                  android:label="@string/app_name"
                  android:icon="@mipmap/ic_launcher"
                  android:theme="@style/AppTheme"
-                 >
+            >
         <activity
                 android:name="com.shl.checkpin.android.activities.MainScreenActivity"
                 android:label="@string/app_name">
@@ -30,7 +30,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
+        <activity android:name=".activities.SelectBillAreaActivity"
+                  android:screenOrientation="portrait"/>
         <!-- [START gcm_receiver] -->
         <receiver
                 android:name="com.google.android.gms.gcm.GcmReceiver"
