@@ -29,7 +29,7 @@ public class AndroidUtils {
 
     public static String getPhoneNumber(Context context) {
         TelephonyManager tMgr = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        return tMgr.getLine1Number();
+        return tMgr.getLine1Number().replace("+","");
     }
 
     public static Point getScreenDimension(Activity activity) {

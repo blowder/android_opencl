@@ -34,7 +34,7 @@ import java.util.Date;
  * Created by sesshoumaru on 19.09.15.
  */
 public class MainScreenActivity extends Activity {
-    DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+    DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-hhmmss");
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
     public static String TAG = "MainScreenActivity";
     private File picture = null;
@@ -64,12 +64,16 @@ public class MainScreenActivity extends Activity {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            picture = appFileLocator.locate(Environment.DIRECTORY_PICTURES, dateFormat.format(new Date()) + ".png");
+            picture = appFileLocator.locate(Environment.DIRECTORY_PICTURES, generateFileName());
             System.out.println(picture);
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(picture));
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     };
+
+    private String generateFileName() {
+        return dateFormat.format(new Date()) + ".png";
+    }
 
 
     @Override
@@ -106,10 +110,10 @@ public class MainScreenActivity extends Activity {
     private void addListenersForButtons() {
         Button cameraButton = (Button) findViewById(R.id.main_screen_camera_button);
         Button aboutButton = (Button) findViewById(R.id.main_screen_about_button);
-        //Button testButton = (Button) findViewById(R.id.testButton);
+        Button testButton = (Button) findViewById(R.id.testButton);
         cameraButton.setOnClickListener(nativeCameraIntend);
         aboutButton.setOnClickListener(aboutButtonListener);
-        //testButton.setOnClickListener(testButtonListener);
+        testButton.setOnClickListener(testButtonListener);
     }
 
     @Override

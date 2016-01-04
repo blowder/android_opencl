@@ -116,8 +116,9 @@ public class ImageProcessingService {
 
         bb = new Rect(bb.x * divider, bb.y * divider, bb.width * divider, bb.height * divider);
         temp = Highgui.imread(source.getAbsolutePath(), CvType.CV_8UC1);
-
-        Highgui.imwrite(target.getAbsolutePath(), temp.submat(bb));
+        temp = temp.submat(bb);
+        temp = OpenCvUtils.adaptiveThreshold(temp);
+        Highgui.imwrite(target.getAbsolutePath(), temp);
         return target;
     }
 
