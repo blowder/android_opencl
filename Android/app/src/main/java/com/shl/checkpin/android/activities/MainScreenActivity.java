@@ -106,10 +106,10 @@ public class MainScreenActivity extends Activity {
     private void addListenersForButtons() {
         Button cameraButton = (Button) findViewById(R.id.main_screen_camera_button);
         Button aboutButton = (Button) findViewById(R.id.main_screen_about_button);
-        Button testButton = (Button) findViewById(R.id.testButton);
+        //Button testButton = (Button) findViewById(R.id.testButton);
         cameraButton.setOnClickListener(nativeCameraIntend);
         aboutButton.setOnClickListener(aboutButtonListener);
-        testButton.setOnClickListener(testButtonListener);
+        //testButton.setOnClickListener(testButtonListener);
     }
 
     @Override
