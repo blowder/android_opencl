@@ -3,6 +3,9 @@ package com.shl.checkpin.android.utils;
 import android.os.Environment;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by sesshoumaru on 08.11.15.
@@ -25,6 +28,14 @@ public class FSFileLocator implements FileLocator {
         return new File(getRoot().getAbsolutePath()
                 + (context != null ? File.separator + context : "")
                 + File.separator + name);
+    }
+    @Override
+    public List<File> locate(String context) {
+        final File result = new File(getRoot().getAbsolutePath()
+                + (context != null ? File.separator + context : ""));
+        return result.isDirectory() ? Arrays.asList(result.listFiles()) : new ArrayList<File>() {{
+            add(result);
+        }};
     }
 
     @Override

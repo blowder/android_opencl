@@ -9,6 +9,7 @@ import android.widget.Toast;
 import com.shl.checkpin.android.dto.UploadConfDTO;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
 import com.shl.checkpin.android.requests.*;
+import com.shl.checkpin.android.utils.AndroidUtils;
 import com.shl.checkpin.android.utils.Constants;
 import org.apache.commons.io.IOUtils;
 import retrofit.RestAdapter;
@@ -112,7 +113,7 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
 
     @Override
     protected void onProgressUpdate(String... message) {
-        Toast.makeText(context, (message != null && message.length != 0 ? message[0] : ""), Toast.LENGTH_SHORT).show();
+        AndroidUtils.toast(context, (message != null && message.length != 0 ? message[0] : ""), Toast.LENGTH_LONG);
     }
 
     @Override
@@ -126,11 +127,7 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
-        if (result) {
-            CharSequence text = "Image was sent!!!";
-            int duration = Toast.LENGTH_LONG;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
+        if (result)
+            AndroidUtils.toast(context, "Image was sent.");
     }
 }

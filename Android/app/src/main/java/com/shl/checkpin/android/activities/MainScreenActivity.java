@@ -44,18 +44,20 @@ public class MainScreenActivity extends Activity {
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Context context = getApplicationContext();
-            CharSequence text = "About button was pressed!";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-
+            AndroidUtils.toast(getApplicationContext(), "About button was pressed!");
         }
     };
     private View.OnClickListener testButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
+            MainScreenActivity.this.startActivity(intent);
+        }
+    };
+    private View.OnClickListener historyButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(MainScreenActivity.this, HistoryActivity.class);
             MainScreenActivity.this.startActivity(intent);
         }
     };
@@ -90,11 +92,7 @@ public class MainScreenActivity extends Activity {
             String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
             new ImageUploadTask(this, AndroidUtils.getPhoneNumber(this), gcmToken).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
         } else {
-            Context context = getApplicationContext();
-            CharSequence text = "Sorry you need internet connection for send bill for analyze!";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
+            AndroidUtils.toast(getApplicationContext(), "Sorry you need internet connection for send bill for analyze!");
         }
     }
 
@@ -111,9 +109,12 @@ public class MainScreenActivity extends Activity {
         Button cameraButton = (Button) findViewById(R.id.main_screen_camera_button);
         Button aboutButton = (Button) findViewById(R.id.main_screen_about_button);
         Button testButton = (Button) findViewById(R.id.testButton);
+        Button historyButton = (Button) findViewById(R.id.historyButton);
         cameraButton.setOnClickListener(nativeCameraIntend);
         aboutButton.setOnClickListener(aboutButtonListener);
         testButton.setOnClickListener(testButtonListener);
+        //testButton.setEnabled(false);
+        historyButton.setOnClickListener(historyButtonListener);
     }
 
     @Override

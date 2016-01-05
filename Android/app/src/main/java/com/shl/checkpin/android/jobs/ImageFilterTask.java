@@ -45,18 +45,9 @@ public class ImageFilterTask extends AsyncTask<File, Void, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
-        if (result) {
-            CharSequence text = "This is check!!!";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
-        if (!result) {
-            //TODO: delete file if not check
-            CharSequence text = "Sorry, we could not detect bill on this image, try photograph again!";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
+        if (result)
+            AndroidUtils.toast(context, "This is check!!!");
+        else
+            AndroidUtils.toast(context, "Sorry, we could not detect bill on this image, try make photo again!", Toast.LENGTH_LONG);
     }
 }

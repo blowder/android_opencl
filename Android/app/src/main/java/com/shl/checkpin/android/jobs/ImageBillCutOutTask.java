@@ -6,6 +6,7 @@ import android.os.Environment;
 import android.widget.Toast;
 import com.shl.checkpin.android.canvas.Circle;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
+import com.shl.checkpin.android.utils.AndroidUtils;
 import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
 import org.opencv.core.Size;
@@ -43,11 +44,8 @@ public class ImageBillCutOutTask extends AsyncTask<Circle, Void, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
-        if (result) {
-            CharSequence text = "Image was created " + target;
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
+        if (result)
+            AndroidUtils.toast(context, "Image was created " + target);
+
     }
 }

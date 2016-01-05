@@ -38,19 +38,10 @@ public class ImageFixAndMakeThumbnailTask extends AsyncTask<File, Void, Boolean>
 
     @Override
     protected void onPostExecute(Boolean result) {
-        if (result) {
-            CharSequence text = "Thumbnail was generated";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
-        if (!result) {
-            //TODO: delete file if not check
-            CharSequence text = "Sorry we could not create thumbnail!";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
+        if (result)
+            AndroidUtils.toast(context, "Thumbnail was generated");
+        else
+            AndroidUtils.toast(context, "Sorry we could not create thumbnail!");
     }
 
     private boolean rotateAndMakeThumbnail(File file) {

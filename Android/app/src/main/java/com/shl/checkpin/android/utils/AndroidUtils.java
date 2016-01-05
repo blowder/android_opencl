@@ -9,6 +9,8 @@ import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Display;
+import android.widget.Toast;
+import com.shl.checkpin.android.activities.HistoryActivity;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
 
 import java.io.File;
@@ -29,7 +31,7 @@ public class AndroidUtils {
 
     public static String getPhoneNumber(Context context) {
         TelephonyManager tMgr = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        return tMgr.getLine1Number().replace("+","");
+        return tMgr.getLine1Number().replace("+", "");
     }
 
     public static Point getScreenDimension(Activity activity) {
@@ -39,5 +41,11 @@ public class AndroidUtils {
         return size;
     }
 
+    public static void toast(Context context, String message) {
+        toast(context, message, Toast.LENGTH_LONG);
+    }
 
+    public static void toast(Context context, String message, int duration) {
+        Toast.makeText(context, message, duration).show();
+    }
 }

@@ -12,16 +12,25 @@
             android:id="@+id/main_screen_camera_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/main_screen_camera_button" android:layout_gravity="center_horizontal"/>
+            android:text="@string/main_screen_camera_button"
+            android:layout_gravity="center_horizontal"/>
     <Button
             android:id="@+id/testButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Canvas" android:layout_gravity="center_horizontal"/>
+            android:text="Canvas"
+            android:layout_gravity="center_horizontal"/>
+    <Button
+            android:id="@+id/historyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="History"
+            android:layout_gravity="center_horizontal"/>
     <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/main_screen_about_button"
-            android:id="@+id/main_screen_about_button" android:layout_gravity="center_horizontal"/>
+            android:id="@+id/main_screen_about_button"
+            android:layout_gravity="center_horizontal"/>
 
 </LinearLayout>
