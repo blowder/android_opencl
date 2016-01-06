@@ -23,9 +23,10 @@ import java.util.List;
  * Created by sesshoumaru on 06.01.16.
  */
 public class HistoryActivity extends Activity implements View.OnClickListener {
-    TableLayout historyTable;
+    private static final String pattern = "^[0-9]{8}-[0-9]{6}\\.png$";
+    private TableLayout historyTable;
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
-    SharedPreferences sharedPreferences;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,13 +38,10 @@ public class HistoryActivity extends Activity implements View.OnClickListener {
     }
 
     private void inflate() {
-        String prefix = AndroidUtils.getPhoneNumber(this);
         String suffix = ".png";
         List<File> files = new ArrayList<File>();
         for (File file : appFileLocator.locate(Environment.DIRECTORY_PICTURES))
-            if (file.getName().startsWith(prefix)
-                    && file.getName().endsWith(suffix)
-                    && !file.getName().contains("thumb"))
+            if (file.getName().matches(pattern))
                 files.add(file);
 
         for (File image : files) {
@@ -51,7 +49,7 @@ public class HistoryActivity extends Activity implements View.OnClickListener {
             TableRow.LayoutParams lp = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT);
             row.setLayoutParams(lp);
             TextView imageName = new TextView(this);
-            imageName.setText(image.getName().replace(prefix + "_", ""));
+            imageName.setText(image.getName());
             Button resendButton = new Button(this);
             resendButton.setWidth(200);
             resendButton.setText("Resend");
