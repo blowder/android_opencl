@@ -31,7 +31,11 @@ public class AndroidUtils {
 
     public static String getPhoneNumber(Context context) {
         TelephonyManager tMgr = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        return tMgr.getLine1Number().replace("+", "");
+        String phoneId = tMgr.getLine1Number();
+        phoneId = phoneId == null || phoneId.isEmpty() ? tMgr.getSimOperatorName() + "_" + tMgr.getSimSerialNumber() : phoneId;
+        if (phoneId.startsWith("+"))
+            phoneId = phoneId.replace("+", "");
+        return phoneId;
     }
 
     public static Point getScreenDimension(Activity activity) {
