@@ -1,25 +1,17 @@
 package com.shl.checkpin.android.activities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
 import com.shl.checkpin.android.gcm.RegistrationIntentService;
-import com.shl.checkpin.android.jobs.ImageFilterTask;
-import com.shl.checkpin.android.jobs.ImageFixAndMakeThumbnailTask;
-import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.utils.*;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -36,6 +28,7 @@ import java.util.Date;
 public class MainScreenActivity extends Activity {
     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-hhmmss");
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
+    private static final int CANVAS_IMAGE_ACTIVITY_REQUEST_CODE = 300;
     public static String TAG = "MainScreenActivity";
     private File picture = null;
     //private FileLocator externalFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
@@ -80,12 +73,20 @@ public class MainScreenActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        //TODO add manipulation when we already have image file
+        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && picture != null && !picture.exists()) {
+            Intent selectBillIntent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
+            selectBillIntent.putExtra(BundleParams.IMAGE_SOURCE, picture.getName());
+            startActivityForResult(selectBillIntent,CANVAS_IMAGE_ACTIVITY_REQUEST_CODE);
+
+            //new ImageThumbnailCreateTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
+
+        }
+        /*//TODO add manipulation when we already have image file
         System.out.println("picture is " + picture);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (picture != null) {
-            new ImageFixAndMakeThumbnailTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
-            new ImageFilterTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
+            new ImageThumbnailCreateTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
+            new ImageRotateTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
         }
         if (picture != null && AndroidUtils.isInetConnected(this)
                 && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
@@ -93,7 +94,7 @@ public class MainScreenActivity extends Activity {
             new ImageUploadTask(this, AndroidUtils.getPhoneNumber(this), gcmToken).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
         } else {
             AndroidUtils.toast(getApplicationContext(), "Sorry you need internet connection for send bill for analyze!");
-        }
+        }*/
     }
 
     @Override

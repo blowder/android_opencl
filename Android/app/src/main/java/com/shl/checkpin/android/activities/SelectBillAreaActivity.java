@@ -1,9 +1,8 @@
 package com.shl.checkpin.android.activities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.*;
-import android.os.AsyncTask;
+import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.MotionEvent;
@@ -12,17 +11,12 @@ import android.widget.Button;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.canvas.CanvasView;
 import com.shl.checkpin.android.canvas.Circle;
-import com.shl.checkpin.android.jobs.ImageBillCutOutTask;
-import com.shl.checkpin.android.opencv.OpenCvUtils;
-import com.shl.checkpin.android.utils.AndroidUtils;
-import com.shl.checkpin.android.utils.FSFileLocator;
-import com.shl.checkpin.android.utils.FileLocator;
-import com.shl.checkpin.android.utils.FileType;
-import org.opencv.core.Size;
+import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
+import com.shl.checkpin.android.jobs.OnTaskCompletedListener;
+import com.shl.checkpin.android.utils.*;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,31 +25,18 @@ import java.util.List;
  */
 public class SelectBillAreaActivity extends Activity implements View.OnTouchListener {
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
-    String fileName = "bill.jpg";
+    private File originImage;
+    private File thumbnail;
+
     private CanvasView drawView = null;
-    private int canvasWidth;
-    private int canvasHeight;
-    private Button finishButton;
-    Bitmap image;
-    File thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, fileName);
-
-    private int threshold = 50;
-    private int circleRadius = 30;
-    List<Circle> circles = new ArrayList<Circle>();
-
-    private View.OnClickListener finishButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            new ImageBillCutOutTask(getApplicationContext(), thumbnail)
-                    .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, circles.toArray(new Circle[circles.size()]));
-            finish();
-        }
-    };
+    private List<Circle> circles = new ArrayList<Circle>();
 
     private void initCircles() {
-        initScreenDimension();
-        int aThirdOfWidth = canvasWidth / 3;
-        int aThirdOfHeight = canvasHeight / 3;
+        int circleRadius = 30;
+        Point dimension = AndroidUtils.getScreenDimension(this);
+        int aThirdOfWidth = dimension.x / 3;
+        int aThirdOfHeight = dimension.y / 3;
+
         Circle tl = new Circle(aThirdOfWidth, aThirdOfHeight, circleRadius);
         Circle tr = new Circle(aThirdOfWidth * 2, aThirdOfHeight, circleRadius);
         Circle bl = new Circle(aThirdOfWidth, aThirdOfHeight * 2, circleRadius);
@@ -72,38 +53,41 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         circles.add(bl);
     }
 
+    private OnTaskCompletedListener onThumbnailCreate = new OnTaskCompletedListener() {
+        @Override
+        public void onTaskCompleted() {
+            drawView.setBackgroundImage(BitmapFactory.decodeFile(thumbnail.getAbsolutePath()));
+            drawView.invalidate();
+        }
+    };
+
+    private View.OnClickListener onFinishButtonPress = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+           /* new ImageBillCutOutTask(getApplicationContext(), thumbnail)
+                    .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, circles.toArray(new Circle[circles.size()]));*/
+            finish();
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.canvas_screen);
 
-        initCircles();
-        initBackground();
+        originImage = appFileLocator.locate(Environment.DIRECTORY_PICTURES,getIntent().getStringExtra(BundleParams.IMAGE_SOURCE));
+        thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, originImage.getName());
 
-        finishButton = (Button) findViewById(R.id.finishButton);
-        finishButton.setOnClickListener(finishButtonListener);
+        new ImageThumbnailCreateTask(this,onThumbnailCreate).execute(originImage);
+
+        initCircles();
+
+        Button finishButton = (Button) findViewById(R.id.finishButton);
+        finishButton.setOnClickListener(onFinishButtonPress);
 
         drawView = (CanvasView) findViewById(R.id.canvasView);
-        drawView.setBackgroundImage(image);
         drawView.setCircles(circles);
         drawView.setOnTouchListener(this);
-    }
-
-    private void initBackground() {
-        image = BitmapFactory.decodeFile(appFileLocator.locate(Environment.DIRECTORY_PICTURES, fileName).getAbsolutePath());
-        Size dimension = OpenCvUtils.getScaledDimension(new Size(image.getWidth(), image.getHeight()), new Size(canvasWidth, canvasHeight));
-        image = Bitmap.createScaledBitmap(image, (int) dimension.width, (int) dimension.height, true);
-        try {
-            image.compress(Bitmap.CompressFormat.PNG, 100, new FileOutputStream(thumbnail));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void initScreenDimension() {
-        Point size = AndroidUtils.getScreenDimension(this);
-        canvasWidth = size.x;
-        canvasHeight = size.y;
     }
 
     @Override
@@ -112,6 +96,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         float y = event.getY();
         if (MotionEvent.ACTION_MOVE == event.getAction()) {
             List<Circle> touchedCircles = new ArrayList<Circle>();
+            int threshold = 50;
             for (Circle circle : circles)
                 if (x < circle.getX() + threshold
                         && x > circle.getX() - threshold
@@ -127,5 +112,4 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         }
         return true;
     }
-
 }

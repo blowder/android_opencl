@@ -1,11 +1,13 @@
 package com.shl.checkpin.android.opencv;
 
+import android.media.ExifInterface;
 import com.shl.checkpin.android.canvas.Circle;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -282,5 +284,15 @@ public class ImageProcessingService {
         Mat transformationMatrix = Imgproc.getPerspectiveTransform(src_mat, dst_mat);
         Imgproc.warpPerspective(temp, temp, transformationMatrix, size);
         Highgui.imwrite(target.getAbsolutePath(), temp);
+    }
+
+    public double getExifRotationAngle(File source){
+        try {
+            ExifInterface ei = new ExifInterface(source.getAbsolutePath());
+            int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+            return orientation == ExifInterface.ORIENTATION_ROTATE_90 ? 90 : orientation == ExifInterface.ORIENTATION_ROTATE_180 ? 180 : 0;
+        }catch (IOException e){
+            return 0;
+        }
     }
 }
