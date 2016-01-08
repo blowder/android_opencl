@@ -1,5 +1,6 @@
 package com.shl.checkpin.android.opencv;
 
+import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
 import com.shl.checkpin.android.canvas.Circle;
 import org.opencv.core.*;
@@ -286,13 +287,29 @@ public class ImageProcessingService {
         Highgui.imwrite(target.getAbsolutePath(), temp);
     }
 
-    public double getExifRotationAngle(File source){
+    public File adaptiveThreshold(File source, File target) {
+        int blockSize = 21;
+        double C = 14;
+        Mat temp = Highgui.imread(source.getAbsolutePath(), Imgproc.COLOR_BGR2GRAY);
+        temp = OpenCvUtils.adaptiveThreshold(temp, blockSize, C);
+        Highgui.imwrite(target.getAbsolutePath(), temp);
+        return target;
+    }
+
+    public double getExifRotationAngle(File source) {
         try {
             ExifInterface ei = new ExifInterface(source.getAbsolutePath());
             int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
             return orientation == ExifInterface.ORIENTATION_ROTATE_90 ? 90 : orientation == ExifInterface.ORIENTATION_ROTATE_180 ? 180 : 0;
-        }catch (IOException e){
+        } catch (IOException e) {
             return 0;
         }
+    }
+
+    public Point getDimension(File source) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(source.getAbsolutePath(), options);
+        return new Point(options.outWidth, options.outHeight);
     }
 }

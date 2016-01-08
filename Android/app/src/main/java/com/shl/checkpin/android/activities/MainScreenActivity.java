@@ -60,7 +60,6 @@ public class MainScreenActivity extends Activity {
         public void onClick(View v) {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             picture = appFileLocator.locate(Environment.DIRECTORY_PICTURES, generateFileName());
-            System.out.println(picture);
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(picture));
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }
@@ -73,7 +72,7 @@ public class MainScreenActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && picture != null && !picture.exists()) {
+        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && picture != null && resultCode==Activity.RESULT_OK) {
             Intent selectBillIntent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
             selectBillIntent.putExtra(BundleParams.IMAGE_SOURCE, picture.getName());
             startActivityForResult(selectBillIntent,CANVAS_IMAGE_ACTIVITY_REQUEST_CODE);
@@ -83,7 +82,7 @@ public class MainScreenActivity extends Activity {
         }
         /*//TODO add manipulation when we already have image file
         System.out.println("picture is " + picture);
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
         if (picture != null) {
             new ImageThumbnailCreateTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
             new ImageRotateTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);

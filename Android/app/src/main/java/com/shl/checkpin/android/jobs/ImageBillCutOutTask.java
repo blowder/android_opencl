@@ -2,17 +2,13 @@ package com.shl.checkpin.android.jobs;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Environment;
-import android.widget.Toast;
 import com.shl.checkpin.android.canvas.Circle;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
 import com.shl.checkpin.android.utils.AndroidUtils;
-import com.shl.checkpin.android.utils.FSFileLocator;
-import com.shl.checkpin.android.utils.FileLocator;
+import org.opencv.core.Point;
 import org.opencv.core.Size;
 
 import java.io.File;
-import java.util.UUID;
 
 
 /**
@@ -21,31 +17,53 @@ import java.util.UUID;
 public class ImageBillCutOutTask extends AsyncTask<Circle, Void, Boolean> {
 
     private final Context context;
-    private final File image;
-    private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
-    private File target = appFileLocator.locate(Environment.DIRECTORY_PICTURES, UUID.randomUUID() + ".png");
+    private final File source;
+    private final File lowres;
+    private final OnTaskCompletedListener listener;
 
-    public ImageBillCutOutTask(Context context, File image) {
+    private ImageProcessingService processingService = new ImageProcessingService();
+
+    public ImageBillCutOutTask(Context context, File source, File lowres, OnTaskCompletedListener listener) {
         this.context = context;
-        this.image = image;
+        this.source = source;
+        this.lowres = lowres;
+        this.listener = listener;
     }
 
     @Override
     protected Boolean doInBackground(Circle... circles) {
         if (circles.length == 4) {
+            correctRotationOfImage();
+            correctScaleOfCircleCoords(circles);
             double width = Math.max(circles[0].distanceTo(circles[1]), circles[2].distanceTo(circles[3]));
             double height = Math.max(circles[0].distanceTo(circles[3]), circles[1].distanceTo(circles[2]));
-            new ImageProcessingService().cutOutRectangle(image, target, circles, new Size(width, height));
+            processingService.cutOutRectangle(source, source, circles, new Size(width, height));
+            processingService.adaptiveThreshold(source,source);
             return true;
         } else {
             return false;
         }
     }
 
+    private void correctScaleOfCircleCoords(Circle[] circles) {
+        Point sourceDimension = processingService.getDimension(source);
+        Point lowresDimension = processingService.getDimension(lowres);
+        double scaleFactor = sourceDimension.x/lowresDimension.x;
+        for(Circle circle: circles){
+            circle.setX((float) (circle.getX()*scaleFactor));
+            circle.setY((float) (circle.getY()*scaleFactor));
+        }
+    }
+
+    private void correctRotationOfImage() {
+        double angle = processingService.getExifRotationAngle(source);
+        processingService.rotate(source,source,angle);
+    }
+
     @Override
     protected void onPostExecute(Boolean result) {
-        if (result)
-            AndroidUtils.toast(context, "Image was created " + target);
-
+        if (result) {
+            listener.onTaskCompleted();
+        }
     }
 }

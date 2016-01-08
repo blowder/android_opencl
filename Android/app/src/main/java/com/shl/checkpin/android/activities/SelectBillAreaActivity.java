@@ -1,22 +1,25 @@
 package com.shl.checkpin.android.activities;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.graphics.*;
-import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.canvas.CanvasView;
 import com.shl.checkpin.android.canvas.Circle;
+import com.shl.checkpin.android.jobs.ImageBillCutOutTask;
 import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
+import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.jobs.OnTaskCompletedListener;
 import com.shl.checkpin.android.utils.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +33,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
 
     private CanvasView drawView = null;
     private List<Circle> circles = new ArrayList<Circle>();
+    SharedPreferences sharedPreferences;
 
     private void initCircles() {
         int circleRadius = 30;
@@ -61,11 +65,25 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         }
     };
 
+    private OnTaskCompletedListener onImageReadyForUpload = new OnTaskCompletedListener() {
+        @Override
+        public void onTaskCompleted() {
+            if (originImage != null && AndroidUtils.isInetConnected(SelectBillAreaActivity.this)
+                    && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
+                String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
+                String userId = AndroidUtils.getPhoneNumber(SelectBillAreaActivity.this);
+                new ImageUploadTask(SelectBillAreaActivity.this, userId, gcmToken).execute(originImage);
+            }else{
+                AndroidUtils.toast(SelectBillAreaActivity.this,"Image was not sent, you can send it from history page manually", Toast.LENGTH_LONG);
+            }
+        }
+    };
+
     private View.OnClickListener onFinishButtonPress = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-           /* new ImageBillCutOutTask(getApplicationContext(), thumbnail)
-                    .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, circles.toArray(new Circle[circles.size()]));*/
+            AndroidUtils.toast(SelectBillAreaActivity.this, "Bill will be uploaded soon!");
+            new ImageBillCutOutTask(getApplicationContext(), originImage, thumbnail, onImageReadyForUpload).execute(circles.toArray(new Circle[circles.size()]));
             finish();
         }
     };
@@ -74,11 +92,12 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.canvas_screen);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        originImage = appFileLocator.locate(Environment.DIRECTORY_PICTURES,getIntent().getStringExtra(BundleParams.IMAGE_SOURCE));
+        originImage = appFileLocator.locate(Environment.DIRECTORY_PICTURES, getIntent().getStringExtra(BundleParams.IMAGE_SOURCE));
         thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, originImage.getName());
 
-        new ImageThumbnailCreateTask(this,onThumbnailCreate).execute(originImage);
+        new ImageThumbnailCreateTask(this, onThumbnailCreate).execute(originImage);
 
         initCircles();
 

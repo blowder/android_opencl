@@ -38,7 +38,6 @@ public class HistoryActivity extends Activity implements View.OnClickListener {
     }
 
     private void inflate() {
-        String suffix = ".png";
         List<File> files = new ArrayList<File>();
         for (File file : appFileLocator.locate(Environment.DIRECTORY_PICTURES))
             if (file.getName().matches(pattern))
