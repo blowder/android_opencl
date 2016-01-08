@@ -3,4 +3,8 @@
     <string name="main_screen_camera_button">Make bill photo</string>
     <string name="main_screen_about_button">About</string>
     <string name="camera_activity_capture_button">Capture</string>
+    <string name="main_screen_history">History</string>
+    <string name="main_screen_button_width">250px</string>
+    <string name="canvas_screen_finish_button">Finish</string>
+
 </resources>

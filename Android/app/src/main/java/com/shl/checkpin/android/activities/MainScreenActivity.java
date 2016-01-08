@@ -31,7 +31,6 @@ public class MainScreenActivity extends Activity {
     private static final int CANVAS_IMAGE_ACTIVITY_REQUEST_CODE = 300;
     public static String TAG = "MainScreenActivity";
     private File picture = null;
-    //private FileLocator externalFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
 
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
@@ -40,13 +39,7 @@ public class MainScreenActivity extends Activity {
             AndroidUtils.toast(getApplicationContext(), "About button was pressed!");
         }
     };
-    private View.OnClickListener testButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Intent intent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
-            MainScreenActivity.this.startActivity(intent);
-        }
-    };
+
     private View.OnClickListener historyButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -59,16 +52,11 @@ public class MainScreenActivity extends Activity {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            picture = appFileLocator.locate(Environment.DIRECTORY_PICTURES, generateFileName());
+            picture = appFileLocator.locate(Environment.DIRECTORY_PICTURES, dateFormat.format(new Date()) + ".png");
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(picture));
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     };
-
-    private String generateFileName() {
-        return dateFormat.format(new Date()) + ".png";
-    }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -76,24 +64,7 @@ public class MainScreenActivity extends Activity {
             Intent selectBillIntent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
             selectBillIntent.putExtra(BundleParams.IMAGE_SOURCE, picture.getName());
             startActivityForResult(selectBillIntent,CANVAS_IMAGE_ACTIVITY_REQUEST_CODE);
-
-            //new ImageThumbnailCreateTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
-
         }
-        /*//TODO add manipulation when we already have image file
-        System.out.println("picture is " + picture);
-
-        if (picture != null) {
-            new ImageThumbnailCreateTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
-            new ImageRotateTask(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
-        }
-        if (picture != null && AndroidUtils.isInetConnected(this)
-                && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
-            String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
-            new ImageUploadTask(this, AndroidUtils.getPhoneNumber(this), gcmToken).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, picture);
-        } else {
-            AndroidUtils.toast(getApplicationContext(), "Sorry you need internet connection for send bill for analyze!");
-        }*/
     }
 
     @Override
@@ -107,14 +78,11 @@ public class MainScreenActivity extends Activity {
 
     private void addListenersForButtons() {
         Button cameraButton = (Button) findViewById(R.id.main_screen_camera_button);
-        Button aboutButton = (Button) findViewById(R.id.main_screen_about_button);
-        Button testButton = (Button) findViewById(R.id.testButton);
         Button historyButton = (Button) findViewById(R.id.historyButton);
+        Button aboutButton = (Button) findViewById(R.id.main_screen_about_button);
         cameraButton.setOnClickListener(nativeCameraIntend);
-        aboutButton.setOnClickListener(aboutButtonListener);
-        testButton.setOnClickListener(testButtonListener);
-        //testButton.setEnabled(false);
         historyButton.setOnClickListener(historyButtonListener);
+        aboutButton.setOnClickListener(aboutButtonListener);
     }
 
     @Override

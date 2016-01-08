@@ -288,8 +288,8 @@ public class ImageProcessingService {
     }
 
     public File adaptiveThreshold(File source, File target) {
-        int blockSize = 21;
-        double C = 14;
+        int blockSize = 51;
+        double C = 12;
         Mat temp = Highgui.imread(source.getAbsolutePath(), Imgproc.COLOR_BGR2GRAY);
         temp = OpenCvUtils.adaptiveThreshold(temp, blockSize, C);
         Highgui.imwrite(target.getAbsolutePath(), temp);

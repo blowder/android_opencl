@@ -7,30 +7,29 @@
     <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/imageView" android:layout_gravity="center_horizontal" android:src="@drawable/logo"/>
+            android:id="@+id/imageView"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/logo"/>
     <Button
             android:id="@+id/main_screen_camera_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/main_screen_camera_button"
-            android:layout_gravity="center_horizontal"/>
-    <Button
-            android:id="@+id/testButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Canvas"
-            android:layout_gravity="center_horizontal"/>
+            android:layout_gravity="center_horizontal"
+            android:minWidth="@dimen/main_screen_button_width"/>
     <Button
             android:id="@+id/historyButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="History"
-            android:layout_gravity="center_horizontal"/>
+            android:text="@string/main_screen_history"
+            android:layout_gravity="center_horizontal"
+            android:minWidth="@dimen/main_screen_button_width"/>
     <Button
+            android:id="@+id/main_screen_about_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/main_screen_about_button"
-            android:id="@+id/main_screen_about_button"
-            android:layout_gravity="center_horizontal"/>
+            android:layout_gravity="center_horizontal"
+            android:minWidth="@dimen/main_screen_button_width"/>
 
 </LinearLayout>
