@@ -47,7 +47,7 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
 
         if (!image.exists())
             return false;
-        new ImageProcessingService().resize(image, image, 600, 2000);
+        new ImageProcessingService().resize(image, image, 600, 20000);
         /*
         FileInputStream fis = new FileInputStream(image);
         byte[] fileBytes = IOUtils.toByteArray(fis);
