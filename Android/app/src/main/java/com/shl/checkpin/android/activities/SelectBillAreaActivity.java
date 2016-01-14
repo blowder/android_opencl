@@ -36,7 +36,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
     SharedPreferences sharedPreferences;
 
     private void initCircles() {
-        int circleRadius = 30;
+        int circleRadius = AndroidUtils.mmInPixels(this,3);
         Point dimension = AndroidUtils.getScreenDimension(this);
         int aThirdOfWidth = dimension.x / 3;
         int aThirdOfHeight = dimension.y / 3;
@@ -115,7 +115,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         float y = event.getY();
         if (MotionEvent.ACTION_MOVE == event.getAction()) {
             List<Circle> touchedCircles = new ArrayList<Circle>();
-            int threshold = 50;
+            int threshold = AndroidUtils.mmInPixels(this,5);
             for (Circle circle : circles)
                 if (x < circle.getX() + threshold
                         && x > circle.getX() - threshold

@@ -7,6 +7,7 @@ import android.media.ExifInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.widget.Toast;
@@ -44,6 +45,20 @@ public class AndroidUtils {
         display.getSize(size);
         return size;
     }
+
+    public static int mmInPixels(Activity activity, int mm){
+        double InchInSm = 2.54;
+        double InchInMm = InchInSm*10;
+        double inches = mm*(1/InchInMm);
+        return (int)(getScreenDpi(activity)*inches);
+    }
+
+    public static int getScreenDpi(Activity activity){
+        DisplayMetrics metrics = new DisplayMetrics();
+        activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return metrics.densityDpi;
+    }
+
 
     public static void toast(Context context, String message) {
         toast(context, message, Toast.LENGTH_LONG);
