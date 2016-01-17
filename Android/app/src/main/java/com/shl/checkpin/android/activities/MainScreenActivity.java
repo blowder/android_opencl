@@ -43,7 +43,7 @@ public class MainScreenActivity extends Activity {
     private View.OnClickListener historyButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(MainScreenActivity.this, HistoryActivity.class);
+            Intent intent = new Intent(MainScreenActivity.this, NewHistoryActivity.class);
             MainScreenActivity.this.startActivity(intent);
         }
     };
