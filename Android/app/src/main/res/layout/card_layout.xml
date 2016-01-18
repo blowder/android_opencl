@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="1mm"
-        card_view:cardBackgroundColor="@color/material_grey_800">
+        card_view:cardBackgroundColor="@color/material_grey_600">
     <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

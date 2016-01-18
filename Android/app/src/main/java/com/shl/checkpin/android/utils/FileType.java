@@ -6,7 +6,8 @@ package com.shl.checkpin.android.utils;
 public enum FileType {
 
     IMAGE_THUMB("_thumb.png"),
-    IMAGE_UPLOAD_META("_meta");
+    IMAGE_UPLOAD_META("_meta"),
+    IMAGE_LOWRES("_low.png");
 
 
     private final String prefix;

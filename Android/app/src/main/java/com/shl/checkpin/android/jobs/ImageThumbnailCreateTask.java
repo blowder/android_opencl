@@ -20,15 +20,17 @@ public class ImageThumbnailCreateTask extends AsyncTask<File, Void, Boolean> {
     private final OnTaskCompletedListener listener;
     private final int height;
     private final int width;
-    private FileLocator fileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
+    private final File result;
+    //private FileLocator fileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
     private ImageProcessingService processingService = new ImageProcessingService();
 
 
-    public ImageThumbnailCreateTask(int width, int height, Context context, OnTaskCompletedListener listener) {
+    public ImageThumbnailCreateTask(int width, int height, File result, Context context, OnTaskCompletedListener listener) {
         this.width = width;
         this.height = height;
         this.context = context;
         this.listener = listener;
+        this.result = result;
     }
 
     @Override
@@ -41,7 +43,8 @@ public class ImageThumbnailCreateTask extends AsyncTask<File, Void, Boolean> {
     @Override
     protected void onPostExecute(Boolean result) {
         if (result) {
-            listener.onTaskCompleted();
+            if (listener != null)
+                listener.onTaskCompleted();
         } else
             AndroidUtils.toast(context, "Sorry we could not create thumbnail!");
     }
@@ -49,11 +52,11 @@ public class ImageThumbnailCreateTask extends AsyncTask<File, Void, Boolean> {
     private boolean makeThumbnail(File file) {
         if (!file.exists())
             return false;
-        File thumbnail = fileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, file.getName());
+
         double angle = processingService.getExifRotationAngle(file);
         Point dimension = getDimension(angle);
-        processingService.resize(file, thumbnail, dimension.x, dimension.y);
-        processingService.rotate(thumbnail, thumbnail, angle);
+        processingService.resize(file, result, dimension.x, dimension.y);
+        processingService.rotate(result, result, angle);
         return true;
     }
 

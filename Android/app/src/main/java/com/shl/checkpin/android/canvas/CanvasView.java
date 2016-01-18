@@ -39,7 +39,8 @@ public class CanvasView extends View {
         this.context = context;
         initLinePaint();
     }
-    public void addImageSource(File originImage){
+
+    public void addImageSource(File originImage) {
         this.originImage = originImage;
         this.thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, originImage.getName());
     }
@@ -71,23 +72,28 @@ public class CanvasView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        //Bitmap canvasSource = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
+        //Canvas tempCanvas = new Canvas(canvasSource);
+        Canvas tempCanvas = canvas;
         if (backgroundImage != null) {
             int x = (canvas.getWidth() - backgroundImage.getWidth()) / 2;
             x = x < 0 ? 0 : x;
             int y = (canvas.getHeight() - backgroundImage.getHeight()) / 2;
             y = y < 0 ? 0 : y;
-            canvas.drawBitmap(backgroundImage, x, y, null);
+            tempCanvas.drawBitmap(backgroundImage, x, y, null);
         } else {
-            if(originImage!=null)
-                new ImageThumbnailCreateTask(canvas.getWidth(), canvas.getHeight(), context, onThumbnailCreate).execute(originImage);
+            if (originImage != null)
+                new ImageThumbnailCreateTask(canvas.getWidth(), canvas.getHeight(), thumbnail, context, onThumbnailCreate).execute(originImage);
         }
         //background.recycle();
         //background=null;
         for (Circle circle : circles)
             if (circle.getNext() != null)
-                canvas.drawLine(circle.getX(), circle.getY(), circle.getNext().getX(), circle.getNext().getY(), linePaint);
+                tempCanvas.drawLine(circle.getX(), circle.getY(), circle.getNext().getX(), circle.getNext().getY(), linePaint);
         for (Circle circle : circles)
-            circle.draw(canvas);
+            circle.draw(tempCanvas);
+
+        //canvas.drawBitmap(canvasSource, 0, 0, null);
     }
 
     private OnTaskCompletedListener onThumbnailCreate = new OnTaskCompletedListener() {

@@ -2,14 +2,11 @@ package com.shl.checkpin.android.activities;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -18,15 +15,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 import com.shl.checkpin.android.R;
+import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
-import com.shl.checkpin.android.utils.AndroidUtils;
-import com.shl.checkpin.android.utils.Constants;
-import com.shl.checkpin.android.utils.FSFileLocator;
-import com.shl.checkpin.android.utils.FileLocator;
+import com.shl.checkpin.android.utils.*;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by sesshoumaru on 16.01.16.
@@ -87,11 +81,13 @@ public class NewHistoryActivity extends Activity {
                 }
                 if (swipeDir == ItemTouchHelper.RIGHT) {
                     File source = ((HistoryViewHolder) viewHolder).file;
-                    File thumbnail = new File(source.getAbsolutePath().replace(".png", ".png_thumb.png"));
+                    File thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, source.getName());
+                    File lowRes = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_LOWRES, source.getName());
                     int position = files.indexOf(source);
                     files.remove(source);
                     source.delete();
                     thumbnail.delete();
+                    lowRes.delete();
                     adapter.notifyItemRemoved(position);
                     adapter.notifyItemRangeChanged(position, files.size());
                 }
@@ -120,7 +116,13 @@ public class NewHistoryActivity extends Activity {
 
         @Override
         public void onBindViewHolder(HistoryViewHolder holder, int position) {
-            //holder.image.setImageDrawable(Drawable.createFromPath(images.get(position).getAbsolutePath().replace(".png", ".png_thumb.png")));
+            File thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, images.get(position).getName());
+            File lowRes = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_LOWRES, images.get(position).getName());
+            if (!lowRes.exists() && thumbnail.exists()) {
+                int pixels = AndroidUtils.mmInPixels(NewHistoryActivity.this, 20);
+                new ImageThumbnailCreateTask(pixels, pixels, lowRes, NewHistoryActivity.this, null).execute(thumbnail);
+            }
+            holder.image.setImageDrawable(Drawable.createFromPath(lowRes.getAbsolutePath()));
             holder.text.setText(images.get(position).getName());
             holder.file = images.get(position);
         }
@@ -136,6 +138,12 @@ public class NewHistoryActivity extends Activity {
         for (File file : appFileLocator.locate(Environment.DIRECTORY_PICTURES))
             if (file.getName().matches(pattern))
                 files.add(file);
+        Collections.sort(files, new Comparator<File>() {
+            @Override
+            public int compare(File lhs, File rhs) {
+                return new Date(rhs.lastModified()).compareTo(new Date(lhs.lastModified()));
+            }
+        });
         return files;
     }
 }
