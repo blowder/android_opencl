@@ -120,7 +120,7 @@ public class NewHistoryActivity extends Activity {
 
         @Override
         public void onBindViewHolder(HistoryViewHolder holder, int position) {
-            holder.image.setImageDrawable(Drawable.createFromPath(images.get(position).getAbsolutePath().replace(".png", ".png_thumb.png")));
+            //holder.image.setImageDrawable(Drawable.createFromPath(images.get(position).getAbsolutePath().replace(".png", ".png_thumb.png")));
             holder.text.setText(images.get(position).getName());
             holder.file = images.get(position);
         }

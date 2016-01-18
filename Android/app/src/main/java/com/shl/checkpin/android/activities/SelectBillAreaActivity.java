@@ -57,13 +57,6 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         circles.add(bl);
     }
 
-    private OnTaskCompletedListener onThumbnailCreate = new OnTaskCompletedListener() {
-        @Override
-        public void onTaskCompleted() {
-            drawView.setBackgroundImage(BitmapFactory.decodeFile(thumbnail.getAbsolutePath()));
-            drawView.invalidate();
-        }
-    };
 
     private OnTaskCompletedListener onImageReadyForUpload = new OnTaskCompletedListener() {
         @Override
@@ -97,14 +90,13 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         originImage = appFileLocator.locate(Environment.DIRECTORY_PICTURES, getIntent().getStringExtra(BundleParams.IMAGE_SOURCE));
         thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, originImage.getName());
 
-        new ImageThumbnailCreateTask(this, onThumbnailCreate).execute(originImage);
-
         initCircles();
 
         Button finishButton = (Button) findViewById(R.id.finishButton);
         finishButton.setOnClickListener(onFinishButtonPress);
 
         drawView = (CanvasView) findViewById(R.id.canvasView);
+        drawView.addImageSource(originImage);
         drawView.setCircles(circles);
         drawView.setOnTouchListener(this);
     }
