@@ -2,15 +2,18 @@ package com.shl.checkpin.android.utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Point;
 import android.media.ExifInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.v7.app.AlertDialog;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.widget.Toast;
+import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.activities.HistoryActivity;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
 
@@ -46,14 +49,14 @@ public class AndroidUtils {
         return size;
     }
 
-    public static int mmInPixels(Activity activity, int mm){
+    public static int mmInPixels(Activity activity, int mm) {
         double InchInSm = 2.54;
-        double InchInMm = InchInSm*10;
-        double inches = mm*(1/InchInMm);
-        return (int)(getScreenDpi(activity)*inches);
+        double InchInMm = InchInSm * 10;
+        double inches = mm * (1 / InchInMm);
+        return (int) (getScreenDpi(activity) * inches);
     }
 
-    public static int getScreenDpi(Activity activity){
+    public static int getScreenDpi(Activity activity) {
         DisplayMetrics metrics = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
         return metrics.densityDpi;
@@ -66,5 +69,23 @@ public class AndroidUtils {
 
     public static void toast(Context context, String message, int duration) {
         Toast.makeText(context, message, duration).show();
+    }
+
+    public static void dialog(Context context, String title, String message, DialogInterface.OnClickListener listener) {
+        if (listener == null) {
+            listener = new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.cancel();
+                }
+            };
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setIcon(R.drawable.logo)
+                .setCancelable(false)
+                .setNegativeButton("OK", listener);
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 }

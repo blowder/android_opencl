@@ -113,7 +113,8 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
 
     @Override
     protected void onProgressUpdate(String... message) {
-        AndroidUtils.toast(context, (message != null && message.length != 0 ? message[0] : ""), Toast.LENGTH_LONG);
+        AndroidUtils.dialog(context, "Upload error!", (message != null && message.length != 0 ? message[0] : ""), null);
+        //AndroidUtils.toast(context, (message != null && message.length != 0 ? message[0] : ""), Toast.LENGTH_LONG);
     }
 
     @Override

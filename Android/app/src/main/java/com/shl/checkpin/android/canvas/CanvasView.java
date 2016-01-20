@@ -27,6 +27,14 @@ public class CanvasView extends View {
     private List<Circle> circles = new ArrayList<Circle>();
     private Paint linePaint = new Paint();
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
+    //preview
+
+    private Bitmap preview;
+    private boolean previewEnabled = false;
+    private float previewX;
+    private float previewY;
+    private int previewWidth;
+    private int previewHeight;
 
 
     public CanvasView(Context context) {
@@ -41,9 +49,22 @@ public class CanvasView extends View {
         initLinePaint();
     }
 
-    public void addImageSource(File originImage) {
+    public void setImageSource(File originImage) {
         this.originImage = originImage;
         this.thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, originImage.getName());
+    }
+
+    public void setDimensionsOfPreview(int width, int height) {
+        this.previewWidth = width;
+        this.previewHeight = height;
+    }
+
+    public boolean isPreviewEnabled() {
+        return previewEnabled;
+    }
+
+    public void setPreviewEnabled(boolean previewEnabled) {
+        this.previewEnabled = previewEnabled;
     }
 
     private void initLinePaint() {
@@ -64,6 +85,14 @@ public class CanvasView extends View {
         this.circles = circles;
         invalidate();
         requestLayout();
+    }
+
+    public void setPreviewX(float previewX) {
+        this.previewX = previewX;
+    }
+
+    public void setPreviewY(float previewY) {
+        this.previewY = previewY;
     }
 
     @Override
@@ -90,6 +119,29 @@ public class CanvasView extends View {
 
         for (Circle circle : circles)
             circle.draw(canvas);
+
+        if (previewEnabled && background != null) {
+
+            int targetX = (int) (previewX - previewWidth / 2);
+            targetX = targetX < 0 ? 0 : targetX;
+            int targetY = (int) (previewY - previewHeight / 2);
+            targetY = targetY < 0 ? 0 : targetY;
+
+            int targetWidth = targetX + previewWidth > background.getWidth() ? background.getWidth() - targetX : previewWidth;
+            int targetHeight = targetY + previewHeight > background.getHeight() ? background.getHeight() - targetY : previewHeight;
+
+            preview = Bitmap.createBitmap(background, targetX, targetY, targetWidth, targetHeight);
+            int x = canvas.getWidth() / 2 - previewWidth / 2;
+            int y = canvas.getHeight() / 2 - previewHeight / 2;
+            canvas.drawBitmap(preview, x, y, null);
+
+            Paint p = new Paint();
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(5);
+            canvas.drawRect(x, y, x + preview.getWidth(), y + preview.getHeight(), p);
+            canvas.drawLine(x + preview.getWidth() / 2, y, x + preview.getWidth() / 2, y + preview.getHeight(), p);
+            canvas.drawLine(x, y + preview.getHeight() / 2, x + preview.getWidth(), y + preview.getHeight() / 2, p);
+        }
     }
 
     private OnTaskCompletedListener onThumbnailCreate = new OnTaskCompletedListener() {
