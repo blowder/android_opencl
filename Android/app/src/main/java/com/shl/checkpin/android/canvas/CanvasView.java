@@ -23,6 +23,7 @@ public class CanvasView extends View {
     private File originImage;
     private File thumbnail;
     private Bitmap backgroundImage;
+    private Bitmap background;
     private List<Circle> circles = new ArrayList<Circle>();
     private Paint linePaint = new Paint();
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
@@ -54,11 +55,6 @@ public class CanvasView extends View {
         return backgroundImage;
     }
 
-    public void setBackgroundImage(Bitmap backgroundImage) {
-        this.backgroundImage = backgroundImage;
-        invalidate();
-        requestLayout();
-    }
 
     public List<Circle> getCircles() {
         return circles;
@@ -72,35 +68,36 @@ public class CanvasView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        //Bitmap canvasSource = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
-        //Canvas tempCanvas = new Canvas(canvasSource);
-        Canvas tempCanvas = canvas;
-        if (backgroundImage != null) {
-            int x = (canvas.getWidth() - backgroundImage.getWidth()) / 2;
+        if (backgroundImage == null)
+            new ImageThumbnailCreateTask(canvas.getWidth(), canvas.getHeight(), thumbnail, context, onThumbnailCreate).execute(originImage);
+
+        if (backgroundImage != null && background == null) {
+            background = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas backgroundCanvas = new Canvas(background);
+            int x = (backgroundCanvas.getWidth() - backgroundImage.getWidth()) / 2;
             x = x < 0 ? 0 : x;
-            int y = (canvas.getHeight() - backgroundImage.getHeight()) / 2;
+            int y = (backgroundCanvas.getHeight() - backgroundImage.getHeight()) / 2;
             y = y < 0 ? 0 : y;
-            tempCanvas.drawBitmap(backgroundImage, x, y, null);
-        } else {
-            if (originImage != null)
-                new ImageThumbnailCreateTask(canvas.getWidth(), canvas.getHeight(), thumbnail, context, onThumbnailCreate).execute(originImage);
+            backgroundCanvas.drawBitmap(backgroundImage, x, y, null);
         }
-        //background.recycle();
-        //background=null;
+
+        if (background != null)
+            canvas.drawBitmap(background, 0, 0, null);
+
         for (Circle circle : circles)
             if (circle.getNext() != null)
-                tempCanvas.drawLine(circle.getX(), circle.getY(), circle.getNext().getX(), circle.getNext().getY(), linePaint);
-        for (Circle circle : circles)
-            circle.draw(tempCanvas);
+                canvas.drawLine(circle.getX(), circle.getY(), circle.getNext().getX(), circle.getNext().getY(), linePaint);
 
-        //canvas.drawBitmap(canvasSource, 0, 0, null);
+        for (Circle circle : circles)
+            circle.draw(canvas);
     }
 
     private OnTaskCompletedListener onThumbnailCreate = new OnTaskCompletedListener() {
         @Override
         public void onTaskCompleted() {
-            setBackgroundImage(BitmapFactory.decodeFile(thumbnail.getAbsolutePath()));
+            backgroundImage = BitmapFactory.decodeFile(thumbnail.getAbsolutePath());
             invalidate();
+            requestLayout();
         }
     };
 }
