@@ -75,6 +75,8 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         @Override
         public void onClick(View v) {
             AndroidUtils.toast(SelectBillAreaActivity.this, "Bill will be uploaded soon!");
+            for (Circle circle : circles)
+                circle.setCenter(drawView.getPointOnBackgroundImage(circle.getCenter()));
             new ImageBillCutOutTask(getApplicationContext(), originImage, thumbnail, onImageReadyForUpload).execute(circles.toArray(new Circle[circles.size()]));
             finish();
         }
@@ -119,13 +121,13 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
                     touchedCircles.add(circle);
 
             if (touchedCircles.size() != 0) {
-                touchedCircles.get(0).setX(x);
-                touchedCircles.get(0).setY(y);
+                touchedCircles.get(0).setX((int) x);
+                touchedCircles.get(0).setY((int) y);
             }
             drawView.invalidate();
         }
 
-        if(MotionEvent.ACTION_UP==event.getAction()){
+        if (MotionEvent.ACTION_UP == event.getAction()) {
             drawView.setPreviewEnabled(false);
             drawView.invalidate();
         }

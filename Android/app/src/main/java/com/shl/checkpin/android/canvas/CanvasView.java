@@ -22,9 +22,10 @@ public class CanvasView extends View {
     private Context context;
     private File originImage;
     private File thumbnail;
-    private Bitmap backgroundImage;
-    private Bitmap background;
+    /*    private Bitmap backgroundImage;
+        private Bitmap background;*/
     private List<Circle> circles = new ArrayList<Circle>();
+    private Background backgroundObj;
     private Paint linePaint = new Paint();
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
     //preview
@@ -59,9 +60,16 @@ public class CanvasView extends View {
         this.previewHeight = height;
     }
 
+    public Point getPointOnBackgroundImage(Point point) {
+        return backgroundObj == null ? point : backgroundObj.getPointOnBackgroundImage(point);
+    }
+
+/*
+
     public boolean isPreviewEnabled() {
         return previewEnabled;
     }
+*/
 
     public void setPreviewEnabled(boolean previewEnabled) {
         this.previewEnabled = previewEnabled;
@@ -72,15 +80,15 @@ public class CanvasView extends View {
         linePaint.setStrokeWidth(5);
     }
 
-    public Bitmap getBackgroundImage() {
+    /*public Bitmap getBackgroundImage() {
         return backgroundImage;
     }
+*/
 
-
-    public List<Circle> getCircles() {
-        return circles;
-    }
-
+    /*   public List<Circle> getCircles() {
+           return circles;
+       }
+   */
     public void setCircles(List<Circle> circles) {
         this.circles = circles;
         invalidate();
@@ -97,10 +105,15 @@ public class CanvasView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (backgroundImage == null)
-            new ImageThumbnailCreateTask(canvas.getWidth(), canvas.getHeight(), thumbnail, context, onThumbnailCreate).execute(originImage);
+        if (backgroundObj == null)
+            new ImageThumbnailCreateTask(canvas.getWidth(), canvas.getHeight(), thumbnail, context, onBackgroundCreate).execute(originImage);
+        else
+            backgroundObj.draw(canvas);
 
-        if (backgroundImage != null && background == null) {
+        /*if(backgroundImage!= null && backgroundObj == null)
+            backgroundObj = new Background(backgroundImage);*/
+
+        /*if (backgroundImage != null && background == null) {
             background = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
             Canvas backgroundCanvas = new Canvas(background);
             int x = (backgroundCanvas.getWidth() - backgroundImage.getWidth()) / 2;
@@ -108,11 +121,11 @@ public class CanvasView extends View {
             int y = (backgroundCanvas.getHeight() - backgroundImage.getHeight()) / 2;
             y = y < 0 ? 0 : y;
             backgroundCanvas.drawBitmap(backgroundImage, x, y, null);
-        }
+        }*/
 
-        if (background != null)
-            canvas.drawBitmap(background, 0, 0, null);
-
+        /*if (backgroundObj != null)
+            backgroundObj.draw(canvas);
+*/
         for (Circle circle : circles)
             if (circle.getNext() != null)
                 canvas.drawLine(circle.getX(), circle.getY(), circle.getNext().getX(), circle.getNext().getY(), linePaint);
@@ -120,7 +133,7 @@ public class CanvasView extends View {
         for (Circle circle : circles)
             circle.draw(canvas);
 
-        if (previewEnabled && background != null) {
+        /*if (previewEnabled && background != null) {
 
             int targetX = (int) (previewX - previewWidth / 2);
             targetX = targetX < 0 ? 0 : targetX;
@@ -141,13 +154,14 @@ public class CanvasView extends View {
             canvas.drawRect(x, y, x + preview.getWidth(), y + preview.getHeight(), p);
             canvas.drawLine(x + preview.getWidth() / 2, y, x + preview.getWidth() / 2, y + preview.getHeight(), p);
             canvas.drawLine(x, y + preview.getHeight() / 2, x + preview.getWidth(), y + preview.getHeight() / 2, p);
-        }
+        }*/
     }
 
-    private OnTaskCompletedListener onThumbnailCreate = new OnTaskCompletedListener() {
+    private OnTaskCompletedListener onBackgroundCreate = new OnTaskCompletedListener() {
         @Override
         public void onTaskCompleted() {
-            backgroundImage = BitmapFactory.decodeFile(thumbnail.getAbsolutePath());
+            Bitmap image = BitmapFactory.decodeFile(thumbnail.getAbsolutePath());
+            backgroundObj = new Background(image);
             invalidate();
             requestLayout();
         }
