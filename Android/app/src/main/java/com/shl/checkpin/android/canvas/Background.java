@@ -8,36 +8,54 @@ import android.graphics.Point;
  * Created by sesshoumaru on 24.01.16.
  */
 public class Background {
-    private int y;
-    private int x;
+    private Point lt;
     private Bitmap image;
+    private Bitmap background;
 
     public Background(Bitmap image) {
         this.image = image;
     }
 
     public Point getPointOnBackgroundImage(Point point) {
-        Point result = new Point();
-        result.x = point.x - this.x;
-        result.x = result.x < 0 ? 0 : result.x;
-        result.y = point.y - this.y;
-        result.y = result.y < 0 ? 0 : result.y;
-        return result;
+        if (lt == null) {
+            return point;
+        } else {
+            Point result = new Point();
+            result.x = point.x - lt.x;
+            result.x = result.x < 0 ? 0 : result.x;
+            result.y = point.y - lt.y;
+            result.y = result.y < 0 ? 0 : result.y;
+            return result;
+        }
     }
 
     public Bitmap getImage() {
         return image;
     }
 
-    public void draw(Canvas canvas) {
-        initCoords(canvas);
-        canvas.drawBitmap(image, x, y, null);
+    public Bitmap getBackground() {
+        return background;
     }
 
-    private void initCoords(Canvas canvas) {
+    public void draw(Canvas canvas) {
+        initBackground(canvas, image);
+        canvas.drawBitmap(background, 0, 0, null);
+    }
+
+    private void initBackground(Canvas canvas, Bitmap image) {
+        if (background == null) {
+            lt = getCenteredImageCoords(canvas, image);
+            background = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas fakeCanvas = new Canvas(background);
+            fakeCanvas.drawBitmap(image, lt.x, lt.y, null);
+        }
+    }
+
+    private Point getCenteredImageCoords(Canvas canvas, Bitmap image) {
         int x = (canvas.getWidth() - image.getWidth()) / 2;
-        this.x = x < 0 ? 0 : x;
+        x = x < 0 ? 0 : x;
         int y = (canvas.getHeight() - image.getHeight()) / 2;
-        this.y = y < 0 ? 0 : y;
+        y = y < 0 ? 0 : y;
+        return new Point(x, y);
     }
 }

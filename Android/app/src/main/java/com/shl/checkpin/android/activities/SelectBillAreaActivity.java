@@ -108,9 +108,6 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         float x = event.getX();
         float y = event.getY();
         if (MotionEvent.ACTION_MOVE == event.getAction()) {
-            drawView.setPreviewEnabled(true);
-            drawView.setPreviewX(x);
-            drawView.setPreviewY(y);
             List<Circle> touchedCircles = new ArrayList<Circle>();
             int threshold = AndroidUtils.mmInPixels(this, 5);
             for (Circle circle : circles)
@@ -121,6 +118,8 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
                     touchedCircles.add(circle);
 
             if (touchedCircles.size() != 0) {
+                drawView.enablePreview();
+                drawView.setTouchCoords(new Point((int) x, (int) y));
                 touchedCircles.get(0).setX((int) x);
                 touchedCircles.get(0).setY((int) y);
             }
@@ -128,7 +127,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         }
 
         if (MotionEvent.ACTION_UP == event.getAction()) {
-            drawView.setPreviewEnabled(false);
+            drawView.disablePreview();
             drawView.invalidate();
         }
         return true;

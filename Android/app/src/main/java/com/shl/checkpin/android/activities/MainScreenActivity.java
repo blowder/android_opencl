@@ -26,7 +26,7 @@ import java.util.Date;
  * Created by sesshoumaru on 19.09.15.
  */
 public class MainScreenActivity extends Activity {
-    DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-hhmmss");
+    DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
     private static final int CANVAS_IMAGE_ACTIVITY_REQUEST_CODE = 300;
     public static String TAG = "MainScreenActivity";

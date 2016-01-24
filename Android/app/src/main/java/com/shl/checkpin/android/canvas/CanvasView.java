@@ -22,32 +22,25 @@ public class CanvasView extends View {
     private Context context;
     private File originImage;
     private File thumbnail;
-    /*    private Bitmap backgroundImage;
-        private Bitmap background;*/
     private List<Circle> circles = new ArrayList<Circle>();
-    private Background backgroundObj;
-    private Paint linePaint = new Paint();
+    private Background background;
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
-    //preview
+    private Bitmap thumbnailBitmap;
 
-    private Bitmap preview;
+    private Preview preview;
     private boolean previewEnabled = false;
-    private float previewX;
-    private float previewY;
+    private Point touchCoords;
     private int previewWidth;
-    private int previewHeight;
-
+    private int prewiewHeight;
 
     public CanvasView(Context context) {
         super(context);
         this.context = context;
-        initLinePaint();
     }
 
     public CanvasView(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.context = context;
-        initLinePaint();
     }
 
     public void setImageSource(File originImage) {
@@ -55,115 +48,81 @@ public class CanvasView extends View {
         this.thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, originImage.getName());
     }
 
-    public void setDimensionsOfPreview(int width, int height) {
-        this.previewWidth = width;
-        this.previewHeight = height;
-    }
-
     public Point getPointOnBackgroundImage(Point point) {
-        return backgroundObj == null ? point : backgroundObj.getPointOnBackgroundImage(point);
+        return background == null ? point : background.getPointOnBackgroundImage(point);
     }
 
-/*
-
-    public boolean isPreviewEnabled() {
-        return previewEnabled;
-    }
-*/
-
-    public void setPreviewEnabled(boolean previewEnabled) {
-        this.previewEnabled = previewEnabled;
+    private Paint getLinePaint() {
+        Paint result = new Paint();
+        result.setColor(Color.BLACK);
+        result.setStrokeWidth(5);
+        return result;
     }
 
-    private void initLinePaint() {
-        linePaint.setColor(Color.BLACK);
-        linePaint.setStrokeWidth(5);
-    }
-
-    /*public Bitmap getBackgroundImage() {
-        return backgroundImage;
-    }
-*/
-
-    /*   public List<Circle> getCircles() {
-           return circles;
-       }
-   */
     public void setCircles(List<Circle> circles) {
         this.circles = circles;
         invalidate();
         requestLayout();
     }
 
-    public void setPreviewX(float previewX) {
-        this.previewX = previewX;
-    }
-
-    public void setPreviewY(float previewY) {
-        this.previewY = previewY;
-    }
-
     @Override
     protected void onDraw(Canvas canvas) {
-        if (backgroundObj == null)
-            new ImageThumbnailCreateTask(canvas.getWidth(), canvas.getHeight(), thumbnail, context, onBackgroundCreate).execute(originImage);
-        else
-            backgroundObj.draw(canvas);
-
-        /*if(backgroundImage!= null && backgroundObj == null)
-            backgroundObj = new Background(backgroundImage);*/
-
-        /*if (backgroundImage != null && background == null) {
-            background = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
-            Canvas backgroundCanvas = new Canvas(background);
-            int x = (backgroundCanvas.getWidth() - backgroundImage.getWidth()) / 2;
-            x = x < 0 ? 0 : x;
-            int y = (backgroundCanvas.getHeight() - backgroundImage.getHeight()) / 2;
-            y = y < 0 ? 0 : y;
-            backgroundCanvas.drawBitmap(backgroundImage, x, y, null);
-        }*/
-
-        /*if (backgroundObj != null)
-            backgroundObj.draw(canvas);
-*/
-        for (Circle circle : circles)
-            if (circle.getNext() != null)
-                canvas.drawLine(circle.getX(), circle.getY(), circle.getNext().getX(), circle.getNext().getY(), linePaint);
+        drawBackground(canvas);
+        drawLines(canvas);
 
         for (Circle circle : circles)
             circle.draw(canvas);
 
-        /*if (previewEnabled && background != null) {
+        drawPreview(canvas);
+    }
 
-            int targetX = (int) (previewX - previewWidth / 2);
-            targetX = targetX < 0 ? 0 : targetX;
-            int targetY = (int) (previewY - previewHeight / 2);
-            targetY = targetY < 0 ? 0 : targetY;
+    private void drawPreview(Canvas canvas) {
+        if (preview != null && previewEnabled)
+            preview.draw(canvas, touchCoords);
 
-            int targetWidth = targetX + previewWidth > background.getWidth() ? background.getWidth() - targetX : previewWidth;
-            int targetHeight = targetY + previewHeight > background.getHeight() ? background.getHeight() - targetY : previewHeight;
+        if (preview == null && thumbnailBitmap != null) {
+            Point center = new Point(canvas.getWidth() / 2, canvas.getHeight() / 2);
+            preview = new Preview(thumbnailBitmap, center, previewWidth, prewiewHeight);
+        }
+    }
 
-            preview = Bitmap.createBitmap(background, targetX, targetY, targetWidth, targetHeight);
-            int x = canvas.getWidth() / 2 - previewWidth / 2;
-            int y = canvas.getHeight() / 2 - previewHeight / 2;
-            canvas.drawBitmap(preview, x, y, null);
+    private void drawLines(Canvas canvas) {
+        for (Circle circle : circles)
+            if (circle.getNext() != null)
+                canvas.drawLine(circle.getX(), circle.getY(), circle.getNext().getX(), circle.getNext().getY(), getLinePaint());
+    }
 
-            Paint p = new Paint();
-            p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(5);
-            canvas.drawRect(x, y, x + preview.getWidth(), y + preview.getHeight(), p);
-            canvas.drawLine(x + preview.getWidth() / 2, y, x + preview.getWidth() / 2, y + preview.getHeight(), p);
-            canvas.drawLine(x, y + preview.getHeight() / 2, x + preview.getWidth(), y + preview.getHeight() / 2, p);
-        }*/
+    private void drawBackground(Canvas canvas) {
+        if (background == null)
+            new ImageThumbnailCreateTask(canvas.getWidth(), canvas.getHeight(), thumbnail, context, onBackgroundCreate).execute(originImage);
+        else
+            background.draw(canvas);
     }
 
     private OnTaskCompletedListener onBackgroundCreate = new OnTaskCompletedListener() {
         @Override
         public void onTaskCompleted() {
-            Bitmap image = BitmapFactory.decodeFile(thumbnail.getAbsolutePath());
-            backgroundObj = new Background(image);
+            thumbnailBitmap = BitmapFactory.decodeFile(thumbnail.getAbsolutePath());
+            background = new Background(thumbnailBitmap);
             invalidate();
             requestLayout();
         }
     };
+
+    public void enablePreview() {
+        this.previewEnabled = true;
+    }
+
+    public void disablePreview() {
+        this.previewEnabled = false;
+    }
+
+    public void setTouchCoords(Point touchCoords) {
+        this.touchCoords = touchCoords;
+    }
+
+    public void setDimensionsOfPreview(int width, int height) {
+        this.previewWidth = width;
+        this.prewiewHeight = height;
+    }
 }
