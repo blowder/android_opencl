@@ -43,7 +43,7 @@ public class MainScreenActivity extends Activity {
     private View.OnClickListener historyButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(MainScreenActivity.this, HistoryActivity.class);
+            Intent intent = new Intent(MainScreenActivity.this, NewHistoryActivity.class);
             MainScreenActivity.this.startActivity(intent);
         }
     };
@@ -60,16 +60,23 @@ public class MainScreenActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && picture != null && resultCode==Activity.RESULT_OK) {
+        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && picture != null && resultCode == Activity.RESULT_OK) {
             Intent selectBillIntent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
             selectBillIntent.putExtra(BundleParams.IMAGE_SOURCE, picture.getName());
-            startActivityForResult(selectBillIntent,CANVAS_IMAGE_ACTIVITY_REQUEST_CODE);
+            startActivityForResult(selectBillIntent, CANVAS_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent intent = getIntent();
+        if (intent != null) {
+            String message = intent.getStringExtra(Constants.GCM_MESSAGE);
+            if (message != null) {
+                AndroidUtils.dialog(MainScreenActivity.this, "GCM message", message, null);
+            }
+        }
         setContentView(R.layout.main_screen);
         startService(new Intent(this, MyInstanceIDListenerService.class));
         startService(new Intent(this, RegistrationIntentService.class));

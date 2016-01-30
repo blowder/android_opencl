@@ -14,7 +14,6 @@ import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.canvas.CanvasView;
 import com.shl.checkpin.android.canvas.Circle;
 import com.shl.checkpin.android.jobs.ImageBillCutOutTask;
-import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.jobs.OnTaskCompletedListener;
 import com.shl.checkpin.android.utils.*;
@@ -36,7 +35,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
     SharedPreferences sharedPreferences;
 
     private void initCircles() {
-        int circleRadius = 30;
+        int circleRadius = AndroidUtils.mmInPixels(this, 3);
         Point dimension = AndroidUtils.getScreenDimension(this);
         int aThirdOfWidth = dimension.x / 3;
         int aThirdOfHeight = dimension.y / 3;
@@ -57,13 +56,6 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         circles.add(bl);
     }
 
-    private OnTaskCompletedListener onThumbnailCreate = new OnTaskCompletedListener() {
-        @Override
-        public void onTaskCompleted() {
-            drawView.setBackgroundImage(BitmapFactory.decodeFile(thumbnail.getAbsolutePath()));
-            drawView.invalidate();
-        }
-    };
 
     private OnTaskCompletedListener onImageReadyForUpload = new OnTaskCompletedListener() {
         @Override
@@ -73,8 +65,8 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
                 String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
                 String userId = AndroidUtils.getPhoneNumber(SelectBillAreaActivity.this);
                 new ImageUploadTask(SelectBillAreaActivity.this, userId, gcmToken).execute(originImage);
-            }else{
-                AndroidUtils.toast(SelectBillAreaActivity.this,"Image was not sent, you can send it from history page manually", Toast.LENGTH_LONG);
+            } else {
+                AndroidUtils.toast(SelectBillAreaActivity.this, "Image was not sent, you can send it from history page manually", Toast.LENGTH_LONG);
             }
         }
     };
@@ -83,6 +75,8 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         @Override
         public void onClick(View v) {
             AndroidUtils.toast(SelectBillAreaActivity.this, "Bill will be uploaded soon!");
+            for (Circle circle : circles)
+                circle.setCenter(drawView.getPointOnBackgroundImage(circle.getCenter()));
             new ImageBillCutOutTask(getApplicationContext(), originImage, thumbnail, onImageReadyForUpload).execute(circles.toArray(new Circle[circles.size()]));
             finish();
         }
@@ -97,14 +91,14 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         originImage = appFileLocator.locate(Environment.DIRECTORY_PICTURES, getIntent().getStringExtra(BundleParams.IMAGE_SOURCE));
         thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, originImage.getName());
 
-        new ImageThumbnailCreateTask(this, onThumbnailCreate).execute(originImage);
-
         initCircles();
 
         Button finishButton = (Button) findViewById(R.id.finishButton);
         finishButton.setOnClickListener(onFinishButtonPress);
 
         drawView = (CanvasView) findViewById(R.id.canvasView);
+        drawView.setImageSource(originImage);
+        drawView.setDimensionsOfPreview(AndroidUtils.mmInPixels(this, 20), AndroidUtils.mmInPixels(this, 20));
         drawView.setCircles(circles);
         drawView.setOnTouchListener(this);
     }
@@ -115,7 +109,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         float y = event.getY();
         if (MotionEvent.ACTION_MOVE == event.getAction()) {
             List<Circle> touchedCircles = new ArrayList<Circle>();
-            int threshold = 50;
+            int threshold = AndroidUtils.mmInPixels(this, 5);
             for (Circle circle : circles)
                 if (x < circle.getX() + threshold
                         && x > circle.getX() - threshold
@@ -124,9 +118,16 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
                     touchedCircles.add(circle);
 
             if (touchedCircles.size() != 0) {
-                touchedCircles.get(0).setX(x);
-                touchedCircles.get(0).setY(y);
+                drawView.enablePreview();
+                drawView.setTouchCoords(new Point((int) x, (int) y));
+                touchedCircles.get(0).setX((int) x);
+                touchedCircles.get(0).setY((int) y);
             }
+            drawView.invalidate();
+        }
+
+        if (MotionEvent.ACTION_UP == event.getAction()) {
+            drawView.disablePreview();
             drawView.invalidate();
         }
         return true;

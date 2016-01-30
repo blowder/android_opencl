@@ -1,6 +1,6 @@
 package com.shl.checkpin.android.jobs;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.Point;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -16,15 +16,21 @@ import java.io.File;
  * Created by sesshoumaru on 03.01.16.
  */
 public class ImageThumbnailCreateTask extends AsyncTask<File, Void, Boolean> {
-    private final Activity context;
+    private final Context context;
     private final OnTaskCompletedListener listener;
-    private FileLocator fileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
+    private final int height;
+    private final int width;
+    private final File result;
+    //private FileLocator fileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
     private ImageProcessingService processingService = new ImageProcessingService();
 
 
-    public ImageThumbnailCreateTask(Activity context, OnTaskCompletedListener listener) {
+    public ImageThumbnailCreateTask(int width, int height, File result, Context context, OnTaskCompletedListener listener) {
+        this.width = width;
+        this.height = height;
         this.context = context;
         this.listener = listener;
+        this.result = result;
     }
 
     @Override
@@ -36,26 +42,27 @@ public class ImageThumbnailCreateTask extends AsyncTask<File, Void, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
-        if(result){
-            listener.onTaskCompleted();
-        }else
+        if (result) {
+            if (listener != null)
+                listener.onTaskCompleted();
+        } else
             AndroidUtils.toast(context, "Sorry we could not create thumbnail!");
     }
 
     private boolean makeThumbnail(File file) {
         if (!file.exists())
             return false;
-        File thumbnail = fileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, file.getName());
+
         double angle = processingService.getExifRotationAngle(file);
         Point dimension = getDimension(angle);
-        processingService.resize(file, thumbnail, dimension.x, dimension.y);
-        processingService.rotate(thumbnail,thumbnail,angle);
+        processingService.resize(file, result, dimension.x, dimension.y);
+        processingService.rotate(result, result, angle);
         return true;
     }
 
     private Point getDimension(double angle) {
-        Point dimension = AndroidUtils.getScreenDimension(context);
-        dimension = angle==90?new Point(dimension.y, dimension.x):dimension;
+        Point dimension = new Point(width, height);
+        dimension = angle == 90 ? new Point(dimension.y, dimension.x) : dimension;
         return dimension;
     }
 }

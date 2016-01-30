@@ -34,6 +34,7 @@
                   android:screenOrientation="portrait"/>
         <activity android:name=".activities.HistoryActivity"
                   android:screenOrientation="portrait"/>
+        <activity android:name=".activities.NewHistoryActivity"/>
         <!-- [START gcm_receiver] -->
         <receiver
                 android:name="com.google.android.gms.gcm.GcmReceiver"

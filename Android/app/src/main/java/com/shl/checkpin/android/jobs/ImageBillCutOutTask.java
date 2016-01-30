@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import com.shl.checkpin.android.canvas.Circle;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
-import com.shl.checkpin.android.utils.AndroidUtils;
 import org.opencv.core.Point;
 import org.opencv.core.Size;
 
@@ -38,7 +37,7 @@ public class ImageBillCutOutTask extends AsyncTask<Circle, Void, Boolean> {
             double width = Math.max(circles[0].distanceTo(circles[1]), circles[2].distanceTo(circles[3]));
             double height = Math.max(circles[0].distanceTo(circles[3]), circles[1].distanceTo(circles[2]));
             processingService.cutOutRectangle(source, source, circles, new Size(width, height));
-            processingService.adaptiveThreshold(source,source);
+            processingService.adaptiveThreshold(source, source);
             return true;
         } else {
             return false;
@@ -48,16 +47,16 @@ public class ImageBillCutOutTask extends AsyncTask<Circle, Void, Boolean> {
     private void correctScaleOfCircleCoords(Circle[] circles) {
         Point sourceDimension = processingService.getDimension(source);
         Point lowresDimension = processingService.getDimension(lowres);
-        double scaleFactor = sourceDimension.x/lowresDimension.x;
-        for(Circle circle: circles){
-            circle.setX((float) (circle.getX()*scaleFactor));
-            circle.setY((float) (circle.getY()*scaleFactor));
+        double scaleFactor = sourceDimension.x / lowresDimension.x;
+        for (Circle circle : circles) {
+            circle.setX((int) (circle.getX() * scaleFactor));
+            circle.setY((int) (circle.getY() * scaleFactor));
         }
     }
 
     private void correctRotationOfImage() {
         double angle = processingService.getExifRotationAngle(source);
-        processingService.rotate(source,source,angle);
+        processingService.rotate(source, source, angle);
     }
 
     @Override

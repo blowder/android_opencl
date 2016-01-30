@@ -11,4 +11,6 @@ public class Constants {
     public static final String REGISTRATION_COMPLETE = "registrationComplete";
     public static final String GCM_TOKEN = "gcmToken";
     public static final String THUMBNAIL_PREFIX = "thumb_";
+
+    public static final String GCM_MESSAGE = "gcm.message";
 }

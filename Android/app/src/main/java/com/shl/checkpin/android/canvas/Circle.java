@@ -9,42 +9,42 @@ import android.graphics.Point;
  * Created by sesshoumaru on 02.01.16.
  */
 public class Circle {
-    float x;
-    float y;
+    Point center = new Point();
     float radius;
     Paint paint;
     Circle next;
 
-    public Circle(float x, float y, float radius) {
-        this.x = x;
-        this.y = y;
+    public Circle(int x, int y, float radius) {
+        this.center.x = x;
+        this.center.y = y;
         this.radius = radius;
         this.paint = new Paint();
         paint.setColor(Color.GRAY);
         paint.setStyle(Paint.Style.FILL);
     }
 
-    public Circle(float x, float y, float radius, Paint paint) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.paint = paint;
+    public Point getCenter() {
+        return center;
+    }
+
+    public void setCenter(Point center) {
+        this.center = center;
     }
 
     public float getX() {
-        return x;
+        return center.x;
     }
 
-    public void setX(float x) {
-        this.x = x;
+    public void setX(int x) {
+        this.center.x = x;
     }
 
     public float getY() {
-        return y;
+        return center.y;
     }
 
-    public void setY(float y) {
-        this.y = y;
+    public void setY(int y) {
+        this.center.y = y;
     }
 
     public float getRadius() {
@@ -72,20 +72,20 @@ public class Circle {
     }
 
     public void draw(Canvas canvas) {
-        canvas.drawCircle(x, y, radius, paint);
+        canvas.drawCircle(center.x, center.y, radius, paint);
     }
 
     public double distanceTo(Circle circle) {
-        double x = this.x - circle.getX();
-        double y = this.y - circle.getY();
+        double x = center.x - circle.getX();
+        double y = center.y - circle.getY();
         return Math.sqrt(x * x + y * y);
     }
 
     @Override
     public String toString() {
         return "Circle{" +
-                "x=" + x +
-                ", y=" + y +
+                "x=" + center.x +
+                ", y=" + center.y +
                 ", radius=" + radius +
                 '}';
     }

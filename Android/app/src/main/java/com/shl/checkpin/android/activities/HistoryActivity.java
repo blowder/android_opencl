@@ -50,7 +50,7 @@ public class HistoryActivity extends Activity implements View.OnClickListener {
             TextView imageName = new TextView(this);
             imageName.setText(image.getName());
             Button resendButton = new Button(this);
-            resendButton.setWidth(200);
+            resendButton.setWidth(AndroidUtils.mmInPixels(this,20));
             resendButton.setText("Resend");
             resendButton.setTag(image);
             resendButton.setOnClickListener(this);
