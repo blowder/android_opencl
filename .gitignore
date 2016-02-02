@@ -1,3 +1,5 @@
 Android/.idea
 Android/*.iml
 .gradle
+*.sublime-project
+*.sublime-workspace

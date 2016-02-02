@@ -23,16 +23,25 @@ import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.utils.*;
 import android.graphics.Matrix;
+import android.content.Intent;
+import android.net.Uri;
+import java.text.ParseException;
 
 
 import java.io.File;
 import java.util.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by sesshoumaru on 16.01.16.
  */
 public class NewHistoryActivity extends Activity {
     private static final String pattern = "^[0-9]{8}-[0-9]{6}\\.png$";
+    private static final DateFormat fileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
+    private static final DateFormat dateFormat = new SimpleDateFormat("dd MMMMM yyyy");
+    private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
     private List<File> files;
     private SharedPreferences sharedPreferences;
@@ -61,8 +70,17 @@ public class NewHistoryActivity extends Activity {
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
         listView.setLayoutManager(mLayoutManager);
+        OnIconClickListener onIconClickListener = new OnIconClickListener(){
+            public void onIconClick(View view, int position){
+                Intent intent = new Intent();
+                intent.setAction(android.content.Intent.ACTION_VIEW);
+                Uri uri = Uri.fromFile(files.get(position));
+                intent.setDataAndType(uri, "image/*");
+                NewHistoryActivity.this.startActivity(intent);
+            }  
+        };
 
-        adapter = new MyAdapter(files);
+        adapter = new MyAdapter(files, onIconClickListener);
 
         listView.setAdapter(adapter);
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -97,7 +115,7 @@ public class NewHistoryActivity extends Activity {
             private Bitmap getBitmapById(int id, int width, int height){
                 Bitmap result = BitmapFactory.decodeResource(getApplicationContext().getResources(), id);                        
                 result = Bitmap.createScaledBitmap(result, width, height, false);                                                   
-                //TODO: remove this spyke
+                //TODO: remove this spike
                 Matrix matrix = new Matrix();
                 matrix.postRotate(180);
                 return Bitmap.createBitmap(result , 0, 0, result.getWidth(), result.getHeight(), matrix, true);
@@ -122,7 +140,7 @@ public class NewHistoryActivity extends Activity {
                         new ImageUploadTask(NewHistoryActivity.this, AndroidUtils.getPhoneNumber(NewHistoryActivity.this), gcmToken)
                         .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, source);
                     } else {
-                        AndroidUtils.toast(NewHistoryActivity.this, "Sorry there is no Internet connection or you try to send unexisted file", Toast.LENGTH_LONG);
+                        AndroidUtils.toast(NewHistoryActivity.this, "Sorry there is no Internet connection or you try to send existed file", Toast.LENGTH_LONG);
                     }
                 }
                 if (swipeDir == ItemTouchHelper.RIGHT) {
@@ -149,9 +167,16 @@ public class NewHistoryActivity extends Activity {
 
     class MyAdapter extends RecyclerView.Adapter<HistoryViewHolder> {
         private final List<File> images;
+        private OnIconClickListener listener;
+
 
         public MyAdapter(List<File> images) {
             this.images = images;
+        }
+
+        public MyAdapter(List<File> images, OnIconClickListener listener) {
+            this.images = images;
+            this.listener = listener;
         }
 
         @Override
@@ -169,8 +194,21 @@ public class NewHistoryActivity extends Activity {
                 new ImageThumbnailCreateTask(pixels, pixels, lowRes, NewHistoryActivity.this, null).execute(thumbnail);
             }
             holder.image.setImageDrawable(Drawable.createFromPath(lowRes.getAbsolutePath()));
-            holder.text.setText(images.get(position).getName());
+            try{
+                Date date = fileNameFormat.parse(images.get(position).getName().replace(".png",""));
+                holder.date.setText(dateFormat.format(date));
+                holder.time.setText(timeFormat.format(date));    
+            }catch(ParseException e){
+                //do not show text
+            }            
             holder.file = images.get(position);
+            final int index = position;
+            holder.image.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    listener.onIconClick(v, index);
+                }
+            });
         }
 
         @Override
@@ -192,5 +230,5 @@ public class NewHistoryActivity extends Activity {
             });
             return files;
         }
-       
-}
+
+    }
