@@ -16,6 +16,10 @@ import com.shl.checkpin.android.utils.*;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import android.content.SharedPreferences;
+import android.view.MenuItem;
+import android.view.Menu;
+import android.preference.PreferenceManager;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -26,13 +30,13 @@ import java.util.Date;
  * Created by sesshoumaru on 19.09.15. 
  */
 public class MainScreenActivity extends Activity {
-    DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
+    private DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
     private static final int CANVAS_IMAGE_ACTIVITY_REQUEST_CODE = 300;
     public static String TAG = "MainScreenActivity";
     private File picture = null;
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
-
+    
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -73,15 +77,47 @@ public class MainScreenActivity extends Activity {
         Intent intent = getIntent();
         if (intent != null) {
             String message = intent.getStringExtra(Constants.GCM_MESSAGE);
-            if (message != null) {
+            if (message != null) 
                 AndroidUtils.dialog(MainScreenActivity.this, "GCM message", message, null);
-            }
         }
         setContentView(R.layout.main_screen);
         startService(new Intent(this, MyInstanceIDListenerService.class));
         startService(new Intent(this, RegistrationIntentService.class));
         addListenersForButtons();
+
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_layout, menu);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
+        MenuItem item = menu.findItem(R.id.offline_mode);
+        item.setChecked(offlineMode);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.offline_mode:
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+                boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
+                System.out.println("Checkbox 1: "+offlineMode);
+                offlineMode = !offlineMode;
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean(Constants.OFFLINE_MODE, offlineMode);
+                editor.commit();  
+                System.out.println("Checkbox 2: "+offlineMode);
+                item.setChecked(offlineMode);
+                return true;
+            case R.id.menu_settings:
+            
+            default:
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
 
     private void addListenersForButtons() {
         Button cameraButton = (Button) findViewById(R.id.main_screen_camera_button);

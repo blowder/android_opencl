@@ -135,7 +135,9 @@ public class NewHistoryActivity extends Activity {
                     files.remove(source);
                     adapter.notifyItemRemoved(position);
                     adapter.notifyItemRangeChanged(position, files.size());
-                    if (AndroidUtils.isInetConnected(NewHistoryActivity.this) && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(NewHistoryActivity.this);
+                    boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
+                    if (AndroidUtils.isInetConnected(NewHistoryActivity.this) && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)&& !offlineMode) {
                         String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
                         new ImageUploadTask(NewHistoryActivity.this, AndroidUtils.getPhoneNumber(NewHistoryActivity.this), gcmToken)
                         .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, source);
