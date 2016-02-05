@@ -93,7 +93,7 @@ public class AndroidUtils {
 
     public static String getVersion(Context context){
         try{
-            InputStream raw = context.getAssets().open("common.properties");
+            InputStream raw = context.getResources().openRawResource(R.raw.common);
             Properties props = new Properties();
             props.load(raw);        
             return props.getProperty("version");
