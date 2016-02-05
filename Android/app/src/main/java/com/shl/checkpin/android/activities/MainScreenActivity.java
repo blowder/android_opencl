@@ -40,7 +40,8 @@ public class MainScreenActivity extends Activity {
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            AndroidUtils.toast(getApplicationContext(), "About button was pressed!");
+            String message = "CheckPin v" + AndroidUtils.getVersion(MainScreenActivity.this);
+            AndroidUtils.toast(getApplicationContext(), message);
         }
     };
 

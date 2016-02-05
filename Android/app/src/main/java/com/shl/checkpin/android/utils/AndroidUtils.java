@@ -16,6 +16,8 @@ import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.activities.HistoryActivity;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
+import java.io.InputStream;
+import java.util.Properties;
 
 import java.io.File;
 import java.io.IOException;
@@ -87,5 +89,17 @@ public class AndroidUtils {
                 .setNegativeButton("OK", listener);
         AlertDialog alert = builder.create();
         alert.show();
+    }
+
+    public static String getVersion(Context context){
+        try{
+            InputStream raw = context.getAssets().open("common.properties");
+            Properties props = new Properties();
+            props.load(raw);        
+            return props.getProperty("version");
+        }catch(IOException e){
+             Log.e(TAG, "getVersion() returns dummy version");
+            return "dummy";
+        }
     }
 }
