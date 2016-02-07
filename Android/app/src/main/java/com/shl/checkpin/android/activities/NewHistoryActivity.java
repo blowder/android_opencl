@@ -39,9 +39,9 @@ import java.util.Date;
  */
 public class NewHistoryActivity extends Activity {
     private static final String pattern = "^[0-9]{8}-[0-9]{6}\\.png$";
-    private static final DateFormat fileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
-    private static final DateFormat dateFormat = new SimpleDateFormat("dd MMMMM yyyy");
-    private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+    private final DateFormat fileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
+    private final DateFormat dateFormat = new SimpleDateFormat("d MMMM yyyy");
+    private final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
     private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
     private List<File> files;
     private SharedPreferences sharedPreferences;
