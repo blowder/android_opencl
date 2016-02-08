@@ -2,6 +2,10 @@ package com.shl.checkpin.android.activities;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -10,9 +14,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
@@ -59,6 +61,23 @@ public class NewHistoryActivity extends Activity {
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
 
             @Override
+            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                View view = viewHolder.itemView;
+                if (dX < 0) {
+                    Paint paint = new Paint();
+                    paint.setColor(Color.GREEN);
+                    c.drawRect(view.getLeft(), view.getTop(), view.getRight(), view.getBottom(), paint);
+                }
+                if (dX > 0) {
+                    Paint paint = new Paint();
+                    paint.setColor(Color.RED);
+                    c.drawRect(view.getLeft(), view.getTop(), view.getRight(), view.getBottom(), paint);
+                }
+
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+
+            @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                 return false;
             }
@@ -68,9 +87,9 @@ public class NewHistoryActivity extends Activity {
                 if (swipeDir == ItemTouchHelper.LEFT) {
                     File source = ((HistoryViewHolder) viewHolder).file;
                     int position = files.indexOf(source);
-                    files.remove(source);
-                    adapter.notifyItemRemoved(position);
-                    adapter.notifyItemRangeChanged(position, files.size());
+
+                    //files.remove(source);
+                    adapter.notifyItemChanged(position);
                     if (AndroidUtils.isInetConnected(NewHistoryActivity.this) && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
                         String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
                         new ImageUploadTask(NewHistoryActivity.this, AndroidUtils.getPhoneNumber(NewHistoryActivity.this), gcmToken)
