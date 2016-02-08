@@ -60,8 +60,10 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
     private OnTaskCompletedListener onImageReadyForUpload = new OnTaskCompletedListener() {
         @Override
         public void onTaskCompleted() {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(SelectBillAreaActivity.this);
+            boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
             if (originImage != null && AndroidUtils.isInetConnected(SelectBillAreaActivity.this)
-                    && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
+                    && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)&& !offlineMode) {
                 String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
                 String userId = AndroidUtils.getPhoneNumber(SelectBillAreaActivity.this);
                 new ImageUploadTask(SelectBillAreaActivity.this, userId, gcmToken).execute(originImage);

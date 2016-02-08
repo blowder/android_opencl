@@ -15,13 +15,15 @@ import java.io.File;
 public class HistoryViewHolder extends RecyclerView.ViewHolder {
     CardView cv;
     ImageView image;
-    TextView text;
-    File file;
+    TextView date;
+    TextView time;
+    File file;    
 
     public HistoryViewHolder(View itemView) {
         super(itemView);
         cv = (CardView) itemView.findViewById(R.id.card_view);
         image = (ImageView) itemView.findViewById(R.id.imageView2);
-        text = (TextView) itemView.findViewById(R.id.textView);
+        date = (TextView) itemView.findViewById(R.id.dateView);
+        time = (TextView) itemView.findViewById(R.id.timeView);
     }
 }

@@ -16,7 +16,7 @@ import java.util.Arrays;
  */
 public class Main {
     public static void main(String... args) throws IOException {
-        File image = new File("C:\\ImageTestSuite\\png\\64bit.png");
+      /*  File image = new File("C:\\ImageTestSuite\\png\\64bit.png");
         String googleToken = "asdfasdfasdfsdfsdfasdf";
         //hello
         RestAdapter uploadTokenAdapter = new RestAdapter.Builder()
@@ -65,7 +65,7 @@ public class Main {
         }catch (RetrofitError e ){
             System.out.println(e.getResponse().getStatus());
                 System.out.println(new String(IOUtils.toByteArray(e.getResponse().getBody().in())));
-        }
+        }*/
 
     }
 }

@@ -2,10 +2,6 @@ package com.shl.checkpin.android.activities;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,7 +10,9 @@ import android.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
@@ -47,6 +45,7 @@ public class NewHistoryActivity extends Activity {
         files = getImages();
         this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
+
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
         listView.setHasFixedSize(true);
@@ -54,28 +53,20 @@ public class NewHistoryActivity extends Activity {
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
         listView.setLayoutManager(mLayoutManager);
+        OnIconClickListener onIconClickListener = new OnIconClickListener(){
+            public void onIconClick(View view, int position){
+                Intent intent = new Intent();
+                intent.setAction(android.content.Intent.ACTION_VIEW);
+                Uri uri = Uri.fromFile(files.get(position));
+                intent.setDataAndType(uri, "image/*");
+                NewHistoryActivity.this.startActivity(intent);
+            }
+        };
 
-        adapter = new MyAdapter(files);
+        adapter = new MyAdapter(files, onIconClickListener);
 
         listView.setAdapter(adapter);
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-
-            @Override
-            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-                View view = viewHolder.itemView;
-                if (dX < 0) {
-                    Paint paint = new Paint();
-                    paint.setColor(Color.GREEN);
-                    c.drawRect(view.getLeft(), view.getTop(), view.getRight(), view.getBottom(), paint);
-                }
-                if (dX > 0) {
-                    Paint paint = new Paint();
-                    paint.setColor(Color.RED);
-                    c.drawRect(view.getLeft(), view.getTop(), view.getRight(), view.getBottom(), paint);
-                }
-
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-            }
 
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
@@ -90,12 +81,14 @@ public class NewHistoryActivity extends Activity {
 
                     //files.remove(source);
                     adapter.notifyItemChanged(position);
-                    if (AndroidUtils.isInetConnected(NewHistoryActivity.this) && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(NewHistoryActivity.this);
+                    boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
+                    if (AndroidUtils.isInetConnected(NewHistoryActivity.this) && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)&& !offlineMode) {
                         String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
                         new ImageUploadTask(NewHistoryActivity.this, AndroidUtils.getPhoneNumber(NewHistoryActivity.this), gcmToken)
-                                .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, source);
+                        .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, source);
                     } else {
-                        AndroidUtils.toast(NewHistoryActivity.this, "Sorry there is no Internet connection or you try to send unexisted file", Toast.LENGTH_LONG);
+                        AndroidUtils.toast(NewHistoryActivity.this, "Sorry there is no Internet connection or you try to send existed file", Toast.LENGTH_LONG);
                     }
                 }
                 if (swipeDir == ItemTouchHelper.RIGHT) {
@@ -122,9 +115,16 @@ public class NewHistoryActivity extends Activity {
 
     class MyAdapter extends RecyclerView.Adapter<HistoryViewHolder> {
         private final List<File> images;
+        private OnIconClickListener listener;
+
 
         public MyAdapter(List<File> images) {
             this.images = images;
+        }
+
+        public MyAdapter(List<File> images, OnIconClickListener listener) {
+            this.images = images;
+            this.listener = listener;
         }
 
         @Override
@@ -142,7 +142,13 @@ public class NewHistoryActivity extends Activity {
                 new ImageThumbnailCreateTask(pixels, pixels, lowRes, NewHistoryActivity.this, null).execute(thumbnail);
             }
             holder.image.setImageDrawable(Drawable.createFromPath(lowRes.getAbsolutePath()));
-            holder.text.setText(images.get(position).getName());
+            try{
+                Date date = fileNameFormat.parse(images.get(position).getName().replace(".png",""));
+                holder.date.setText(dateFormat.format(date));
+                holder.time.setText(timeFormat.format(date));
+            }catch(ParseException e){
+                //do not show text
+            }
             holder.file = images.get(position);
         }
 

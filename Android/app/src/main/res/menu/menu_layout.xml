@@ -1,0 +1,9 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="all">
+        <item android:id="@+id/offline_mode"
+              android:title="Offline mode"/>        
+    </group>
+    
+    <item android:id="@+id/menu_settings"
+        android:title="Additional settings"/>
+</menu>

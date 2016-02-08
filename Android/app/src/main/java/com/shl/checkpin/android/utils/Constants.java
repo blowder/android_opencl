@@ -13,4 +13,6 @@ public class Constants {
     public static final String THUMBNAIL_PREFIX = "thumb_";
 
     public static final String GCM_MESSAGE = "gcm.message";
+    public static final String OFFLINE_MODE = "offline.mode";
+
 }

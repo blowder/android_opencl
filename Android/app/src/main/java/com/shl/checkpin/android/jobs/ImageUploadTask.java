@@ -47,7 +47,7 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
 
         if (!image.exists())
             return false;
-        new ImageProcessingService().resize(image, image, 600, 5000);
+        new ImageProcessingService().resize(image, image, 600, 20000);
         /*
         FileInputStream fis = new FileInputStream(image);
         byte[] fileBytes = IOUtils.toByteArray(fis);
@@ -59,19 +59,21 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
         fos.close();*/
         try {
             //authorization and registration
+            String version = "CheckPin Mobile Android v"+AndroidUtils.getVersion(context);
+
             UploadTokenRequest uploadTokenRequest = authRestAdapter.create(UploadTokenRequest.class);
             phoneNumber = phoneNumber.replace("+", "");
-            String uploadToken = uploadTokenRequest.get(phoneNumber).getToken();
+            String uploadToken = uploadTokenRequest.get(version, phoneNumber).getToken();
 
             GcmRegisterRequest gcmRegisterRequest = authRestAdapter.create(GcmRegisterRequest.class);
-            int responseCode = gcmRegisterRequest.register(uploadToken, googleToken).getStatus();
+            int responseCode = gcmRegisterRequest.register(version, uploadToken, googleToken).getStatus();
             Log.i(TAG, responseCode == 200
                     ? "User with number" + phoneNumber + " was register on upload service"
                     : "Error during registration of " + phoneNumber + " occurred ");
 
             //get configuration
             UploadConfigurationRequest conf = uploadRestAdapter.create(UploadConfigurationRequest.class);
-            UploadConfDTO uploadConf = conf.getConfiguration();
+            UploadConfDTO uploadConf = conf.getConfiguration(version);
 
             //image upload
             byte[] fileInBytes = IOUtils.toByteArray(new FileInputStream(image));
@@ -85,7 +87,7 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
                 int leftLimit = i + chunkSize > fileInBytes.length ? fileInBytes.length : i + chunkSize;
                 byte[] data = Arrays.copyOfRange(fileInBytes, i, leftLimit);
                 TypedInput typedBytes = new TypedByteArrayWithFilename("multipart/form-data", data, image.getName());
-                uploadRestAdapter.create(UploadImageRequest.class).upload(uploadToken, chunkId, chunksTotal, typedBytes);
+                uploadRestAdapter.create(UploadImageRequest.class).upload(version, uploadToken, chunkId, chunksTotal, typedBytes);
                 chunkId++;
             }
             Log.i(TAG, "File " + image + " was uploaded");
