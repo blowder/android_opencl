@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Point;
-import android.media.ExifInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.v7.app.AlertDialog;
@@ -14,14 +13,11 @@ import android.util.Log;
 import android.view.Display;
 import android.widget.Toast;
 import com.shl.checkpin.android.R;
-import com.shl.checkpin.android.activities.HistoryActivity;
-import com.shl.checkpin.android.opencv.ImageProcessingService;
+
 import java.io.InputStream;
 import java.util.Properties;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 
 /**
  * Created by sesshoumaru on 03.01.16.

@@ -3,8 +3,7 @@ package com.shl.checkpin.android.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle; 
-import android.os.Environment;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -12,6 +11,7 @@ import android.widget.Button;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
 import com.shl.checkpin.android.gcm.RegistrationIntentService;
+import com.shl.checkpin.android.model.ImageDoc;
 import com.shl.checkpin.android.utils.*;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -21,22 +21,23 @@ import android.view.MenuItem;
 import android.view.Menu;
 import android.preference.PreferenceManager;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/*  
- * Created by sesshoumaru on 19.09.15. 
+/*
+ * Created by sesshoumaru on 19.09.15.
  */
-public class MainScreenActivity extends Activity {
-    private DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
+public class MainScreenActivity extends AbstractActivity {
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
     private static final int CANVAS_IMAGE_ACTIVITY_REQUEST_CODE = 300;
-    public static String TAG = "MainScreenActivity";
-    private File picture = null;
-    private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
-    
+    private ImageDoc imageDoc = null;
+
+    @Inject
+    @Named(Constants.HIGHRES)
+    FileLocator highResLocator;
+
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -48,7 +49,7 @@ public class MainScreenActivity extends Activity {
     private View.OnClickListener historyButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(MainScreenActivity.this, NewHistoryActivity.class);
+            Intent intent = new Intent(MainScreenActivity.this, HistoryActivity.class);
             MainScreenActivity.this.startActivity(intent);
         }
     };
@@ -57,17 +58,20 @@ public class MainScreenActivity extends Activity {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            picture = appFileLocator.locate(Environment.DIRECTORY_PICTURES, dateFormat.format(new Date()) + ".png");
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(picture));
+            imageDoc = new ImageDoc(new Date());
+            File pictureFile = highResLocator.locate(null, imageDoc.getName());
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(pictureFile));
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     };
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && picture != null && resultCode == Activity.RESULT_OK) {
+        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE
+                && imageDoc != null
+                && resultCode == Activity.RESULT_OK) {
             Intent selectBillIntent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
-            selectBillIntent.putExtra(BundleParams.IMAGE_SOURCE, picture.getName());
+            selectBillIntent.putExtra(BundleParams.IMAGE_SOURCE, imageDoc.getName());
             startActivityForResult(selectBillIntent, CANVAS_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     }
@@ -78,14 +82,13 @@ public class MainScreenActivity extends Activity {
         Intent intent = getIntent();
         if (intent != null) {
             String message = intent.getStringExtra(Constants.GCM_MESSAGE);
-            if (message != null) 
+            if (message != null)
                 AndroidUtils.dialog(MainScreenActivity.this, "GCM message", message, null);
         }
         setContentView(R.layout.main_screen);
         startService(new Intent(this, MyInstanceIDListenerService.class));
         startService(new Intent(this, RegistrationIntentService.class));
         addListenersForButtons();
-
     }
 
     @Override
@@ -104,18 +107,16 @@ public class MainScreenActivity extends Activity {
             case R.id.offline_mode:
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
                 boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
-                System.out.println("Checkbox 1: "+offlineMode);
                 offlineMode = !offlineMode;
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putBoolean(Constants.OFFLINE_MODE, offlineMode);
-                editor.commit();  
-                System.out.println("Checkbox 2: "+offlineMode);
+                editor.commit();
                 item.setChecked(offlineMode);
                 return true;
             case R.id.menu_settings:
-            
+
             default:
-            return super.onOptionsItemSelected(item);
+                return super.onOptionsItemSelected(item);
         }
     }
 

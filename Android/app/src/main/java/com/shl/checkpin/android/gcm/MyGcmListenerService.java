@@ -13,14 +13,12 @@ import com.google.android.gms.gcm.GcmListenerService;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.activities.MainScreenActivity;
 import com.shl.checkpin.android.utils.Constants;
-import com.shl.checkpin.android.utils.FSFileLocator;
 import com.shl.checkpin.android.utils.FileLocator;
 
 /**
  * Created by vfedin on 19.11.2015.
  */
 public class MyGcmListenerService extends GcmListenerService {
-    private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
     String TAG = "MyGcmListenerService";
 
     @Override

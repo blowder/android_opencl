@@ -1,10 +1,8 @@
 package com.shl.checkpin.android.activities;
 
-import android.app.Activity;
 import android.content.SharedPreferences;
 import android.graphics.*;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,6 +16,8 @@ import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.jobs.OnTaskCompletedListener;
 import com.shl.checkpin.android.utils.*;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +25,14 @@ import java.util.List;
 /**
  * Created by sesshoumaru on 29.12.15.
  */
-public class SelectBillAreaActivity extends Activity implements View.OnTouchListener {
-    private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
+public class SelectBillAreaActivity extends AbstractActivity implements View.OnTouchListener {
+    @Inject
+    @Named(Constants.HIGHRES)
+    FileLocator highResLocator;
+    @Inject
+    @Named(Constants.LOWRES)
+    FileLocator lowResLocator;
+
     private File originImage;
     private File thumbnail;
 
@@ -63,7 +69,7 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(SelectBillAreaActivity.this);
             boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
             if (originImage != null && AndroidUtils.isInetConnected(SelectBillAreaActivity.this)
-                    && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)&& !offlineMode) {
+                    && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false) && !offlineMode) {
                 String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
                 String userId = AndroidUtils.getPhoneNumber(SelectBillAreaActivity.this);
                 new ImageUploadTask(SelectBillAreaActivity.this, userId, gcmToken).execute(originImage);
@@ -90,8 +96,9 @@ public class SelectBillAreaActivity extends Activity implements View.OnTouchList
         setContentView(R.layout.canvas_screen);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        originImage = appFileLocator.locate(Environment.DIRECTORY_PICTURES, getIntent().getStringExtra(BundleParams.IMAGE_SOURCE));
-        thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, originImage.getName());
+        String imageName = getIntent().getStringExtra(BundleParams.IMAGE_SOURCE);
+        originImage = highResLocator.locate(null, imageName);
+        thumbnail = lowResLocator.locate(null, imageName);
 
         initCircles();
 

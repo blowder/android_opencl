@@ -2,15 +2,16 @@ package com.shl.checkpin.android.canvas;
 
 import android.content.Context;
 import android.graphics.*;
-import android.os.Environment;
 import android.util.AttributeSet;
 import android.view.View;
+import com.shl.checkpin.android.factories.Injector;
 import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
 import com.shl.checkpin.android.jobs.OnTaskCompletedListener;
-import com.shl.checkpin.android.utils.FSFileLocator;
+import com.shl.checkpin.android.utils.Constants;
 import com.shl.checkpin.android.utils.FileLocator;
-import com.shl.checkpin.android.utils.FileType;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +20,15 @@ import java.util.List;
  * Created by sesshoumaru on 03.01.16.
  */
 public class CanvasView extends View {
+    @Inject
+    @Named(Constants.LOWRES)
+    FileLocator lowResLocator;
     private Context context;
     private File originImage;
     private File thumbnail;
     private List<Circle> circles = new ArrayList<Circle>();
     private Background background;
-    private FileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
+    //private FSFileLocator appFileLocator = new FSFileLocator(FSFileLocator.FSType.EXTERNAL);
     private Bitmap thumbnailBitmap;
 
     private Preview preview;
@@ -44,8 +48,9 @@ public class CanvasView extends View {
     }
 
     public void setImageSource(File originImage) {
+        Injector.inject(this);
         this.originImage = originImage;
-        this.thumbnail = appFileLocator.locate(Environment.DIRECTORY_PICTURES, FileType.IMAGE_THUMB, originImage.getName());
+        this.thumbnail = lowResLocator.locate(null, originImage.getName());
     }
 
     public Point getPointOnBackgroundImage(Point point) {

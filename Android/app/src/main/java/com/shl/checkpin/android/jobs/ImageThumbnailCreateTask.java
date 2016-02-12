@@ -3,12 +3,8 @@ package com.shl.checkpin.android.jobs;
 import android.content.Context;
 import android.graphics.Point;
 import android.os.AsyncTask;
-import android.os.Environment;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
 import com.shl.checkpin.android.utils.AndroidUtils;
-import com.shl.checkpin.android.utils.FSFileLocator;
-import com.shl.checkpin.android.utils.FileLocator;
-import com.shl.checkpin.android.utils.FileType;
 
 import java.io.File;
 

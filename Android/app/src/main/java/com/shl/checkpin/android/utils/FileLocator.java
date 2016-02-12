@@ -12,11 +12,5 @@ public interface FileLocator {
 
     List<File> locate(String context);
 
-    File locate(String context, FileType type, String name);
-
     File getRoot();
-
-    boolean isStorageWritable();
-
-    boolean isStorageReadable();
 }
