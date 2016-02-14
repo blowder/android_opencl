@@ -17,4 +17,5 @@ public class Constants {
     public static final String HIGHRES = "HighRes";
     public static final String LOWRES = "LowRes";
     public static final String ICONS = "Icons";
+    public static final String IMAGE_FILE_DB = "ImagesDb";
 }

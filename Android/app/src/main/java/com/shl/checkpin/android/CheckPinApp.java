@@ -21,6 +21,8 @@ public class CheckPinApp extends Application {
         return Arrays.asList(new ApplicationModule(this),
                 new LocatorModule(this),
                 new ViewModule(),
-                new ActivityModule());
+                new ActivityModule(),
+                new AsynkTaskModule(),
+                new ImageDocServiceModule());
     }
 }

@@ -12,9 +12,8 @@ import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
 import com.shl.checkpin.android.gcm.RegistrationIntentService;
 import com.shl.checkpin.android.model.ImageDoc;
-import com.shl.checkpin.android.model.OnImageDocChangeListener;
+import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.utils.*;
-import org.greenrobot.eventbus.EventBus;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -40,6 +39,9 @@ public class MainScreenActivity extends AbstractActivity {
     @Named(Constants.HIGHRES)
     FileLocator highResLocator;
 
+    @Inject
+    ImageDocService imageDocService;
+
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -61,25 +63,21 @@ public class MainScreenActivity extends AbstractActivity {
         public void onClick(View v) {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             imageDoc = new ImageDoc(new Date());
+            imageDocService.create(imageDoc);
             File pictureFile = highResLocator.locate(null, imageDoc.getName());
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(pictureFile));
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     };
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE
                 && imageDoc != null
                 && resultCode == Activity.RESULT_OK) {
-            imageDoc.setOnSetStatusListener(new OnImageDocChangeListener() {
-                @Override
-                public void notify(ImageDoc imageDoc) {
-                    AndroidUtils.toast(MainScreenActivity.this, "Image changed status to " + imageDoc.getStatus());
-                }
-            });
             Intent selectBillIntent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
-            EventBus.getDefault().postSticky(imageDoc);
+            selectBillIntent.putExtra(BundleParams.IMAGE_SOURCE, imageDoc.getName());
             startActivityForResult(selectBillIntent, CANVAS_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     }

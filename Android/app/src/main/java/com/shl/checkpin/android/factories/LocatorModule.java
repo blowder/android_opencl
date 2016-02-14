@@ -50,6 +50,12 @@ public class LocatorModule {
         return createDirsAndLocator(APP_FOLDER_NAME, ICONS);
     }
 
+    @Provides
+    @Named(IMAGE_FILE_DB)
+    public FileLocator getImageInfo() {
+        return createDirsAndLocator(APP_FOLDER_NAME, IMAGE_FILE_DB);
+    }
+
     private FileLocator createDirsAndLocator(String contextFolder, String imageFolder) {
         File root = contextFolder != null && !contextFolder.isEmpty()
                 ? new File(getStorage(), contextFolder)

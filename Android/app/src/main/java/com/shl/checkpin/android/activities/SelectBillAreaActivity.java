@@ -1,9 +1,7 @@
 package com.shl.checkpin.android.activities;
 
-import android.content.SharedPreferences;
 import android.graphics.*;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -16,10 +14,9 @@ import com.shl.checkpin.android.jobs.ImageBillCutOutTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.jobs.OnTaskCompletedListener;
 import com.shl.checkpin.android.model.ImageDoc;
+import com.shl.checkpin.android.model.ImageDocFileService;
+import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.utils.*;
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -37,6 +34,8 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
     @Inject
     @Named(Constants.LOWRES)
     FileLocator lowResLocator;
+    @Inject
+    ImageDocService imageDocService;
 
     private File originImage;
     private File thumbnail;
@@ -44,6 +43,7 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
     private CanvasView drawView = null;
     private List<Circle> circles = new ArrayList<Circle>();
     private ImageDoc imageDoc;
+
 
 
     private void initCircles() {
@@ -72,15 +72,16 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
     private OnTaskCompletedListener onImageReadyForUpload = new OnTaskCompletedListener() {
         @Override
         public void onTaskCompleted() {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(SelectBillAreaActivity.this);
             boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
             if (offlineMode) {
                 imageDoc.setStatus(ImageDoc.Status.OFFLINE);
+                imageDocService.update(imageDoc);
             } else if (originImage != null && AndroidUtils.isInetConnected(SelectBillAreaActivity.this)
                     && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
-                String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
-                String userId = AndroidUtils.getPhoneNumber(SelectBillAreaActivity.this);
-                new ImageUploadTask(SelectBillAreaActivity.this, userId, gcmToken).execute(originImage);
+                //String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
+                //String userId = AndroidUtils.getPhoneNumber(SelectBillAreaActivity.this);
+                new ImageUploadTask().execute(imageDoc);
+                //new ImageUploadTask(SelectBillAreaActivity.this, userId, gcmToken).execute(originImage);
             } else {
                 AndroidUtils.toast(SelectBillAreaActivity.this, "Image was not sent, you can send it from history page manually", Toast.LENGTH_LONG);
             }
@@ -102,7 +103,13 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.canvas_screen);
-        EventBus.getDefault().register(this);
+        //   EventBus.getDefault().register(this);
+        //imageDocService = new ImageDocFileService(imageDocFileLocator);
+
+        String imageName = getIntent().getStringExtra(BundleParams.IMAGE_SOURCE);
+        imageDoc = imageDocService.findByName(imageName);
+        originImage = highResLocator.locate(null, imageName);
+        thumbnail = lowResLocator.locate(null, imageName);
 
         initCircles();
 
@@ -119,17 +126,17 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
 
     @Override
     public void onStop() {
-        EventBus.getDefault().unregister(this);
+        //  EventBus.getDefault().unregister(this);
         super.onStop();
     }
 
-    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+/*    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     public void onImageTransferEvent(ImageDoc imageDoc) {
         this.imageDoc = imageDoc;
         originImage = highResLocator.locate(null, imageDoc.getName());
         thumbnail = lowResLocator.locate(null, imageDoc.getName());
         EventBus.getDefault().removeStickyEvent(imageDoc);
-    }
+    }*/
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {

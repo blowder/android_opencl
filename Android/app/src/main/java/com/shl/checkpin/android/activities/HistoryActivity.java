@@ -19,6 +19,9 @@ import android.graphics.Canvas;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
+import com.shl.checkpin.android.model.ImageDoc;
+import com.shl.checkpin.android.model.ImageDocFileService;
+import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.utils.*;
 import android.graphics.Matrix;
 import android.content.Intent;
@@ -49,14 +52,15 @@ public class HistoryActivity extends AbstractActivity {
     @Named(Constants.ICONS)
     FileLocator iconsLocator;
 
+    @Inject
+    ImageDocService imageDocService;
+
     private static final String pattern = "^[0-9]{8}-[0-9]{6}\\.png$";
     private final DateFormat fileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
     private final DateFormat dateFormat = new SimpleDateFormat("d MMMM yyyy");
     private final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 
     private List<File> files;
-    private SharedPreferences sharedPreferences;
-
     private MyAdapter adapter;
 
     private RecyclerView listView;
@@ -71,7 +75,7 @@ public class HistoryActivity extends AbstractActivity {
         setContentView(R.layout.new_history_layuot);
         listView = (RecyclerView) findViewById(R.id.history_list);
         files = getImages();
-        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
 
 
         // use this setting to improve performance if you know that changes
@@ -104,20 +108,20 @@ public class HistoryActivity extends AbstractActivity {
                     int iconSize = (itemView.getTop() - itemView.getBottom()) / 2;
                     if (isCurrentlyActive) {
                         if (dX < 0) {
-                            if (sendIcon == null)
-                                sendIcon = getBitmapById(R.raw.send_icon, iconSize, iconSize);
-
-                            int drawableX = itemView.getRight() - (sendIcon.getWidth() + sendIcon.getWidth() / 4);
-                            int drawableY = itemView.getTop() + sendIcon.getWidth() / 2;
-                            c.drawBitmap(sendIcon, drawableX, drawableY, null);
-                        }
-                        if (dX > 0) {
                             if (deleteIcon == null)
                                 deleteIcon = getBitmapById(R.raw.delete_icon, iconSize, iconSize);
 
-                            int drawableX = itemView.getLeft() + deleteIcon.getWidth() / 4;
+                            int drawableX = itemView.getRight() - (deleteIcon.getWidth() + deleteIcon.getWidth() / 4);
                             int drawableY = itemView.getTop() + deleteIcon.getWidth() / 2;
                             c.drawBitmap(deleteIcon, drawableX, drawableY, null);
+                        }
+                        if (dX > 0) {
+                            if (sendIcon == null)
+                                sendIcon = getBitmapById(R.raw.send_icon, iconSize, iconSize);
+
+                            int drawableX = itemView.getLeft() + sendIcon.getWidth() / 4;
+                            int drawableY = itemView.getTop() + sendIcon.getWidth() / 2;
+                            c.drawBitmap(sendIcon, drawableX, drawableY, null);
                         }
                     }
 
@@ -142,22 +146,22 @@ public class HistoryActivity extends AbstractActivity {
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-                if (swipeDir == ItemTouchHelper.LEFT) {
+                if (swipeDir == ItemTouchHelper.RIGHT) {
                     File source = ((HistoryViewHolder) viewHolder).file;
                     int position = files.indexOf(source);
-                    //files.remove(source);
                     adapter.notifyItemChanged(position);
                     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(HistoryActivity.this);
                     boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
-                    if (AndroidUtils.isInetConnected(HistoryActivity.this) && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false) && !offlineMode) {
-                        String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
-                        new ImageUploadTask(HistoryActivity.this, AndroidUtils.getPhoneNumber(HistoryActivity.this), gcmToken)
-                                .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, source);
+                    if (AndroidUtils.isInetConnected(HistoryActivity.this)
+                            && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)
+                            && !offlineMode) {
+                        ImageDoc imageDoc = imageDocService.findByName(source.getName());
+                        new ImageUploadTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, imageDoc);
                     } else {
                         AndroidUtils.toast(HistoryActivity.this, "Sorry there is no Internet connection or you try to send existed file", Toast.LENGTH_LONG);
                     }
                 }
-                if (swipeDir == ItemTouchHelper.RIGHT) {
+                if (swipeDir == ItemTouchHelper.LEFT) {
                     File source = ((HistoryViewHolder) viewHolder).file;
                     File lowRes = lowResLocator.locate(null, source.getName());
                     File icon = iconsLocator.locate(null, source.getName());
@@ -206,8 +210,9 @@ public class HistoryActivity extends AbstractActivity {
             if (!icon.exists() && lowRes.exists()) {
                 int pixels = AndroidUtils.mmInPixels(HistoryActivity.this, 20);
                 new ImageThumbnailCreateTask(pixels, pixels, icon, HistoryActivity.this, null).execute(lowRes);
+            }else {
+                holder.image.setImageDrawable(Drawable.createFromPath(icon.getAbsolutePath()));
             }
-            holder.image.setImageDrawable(Drawable.createFromPath(icon.getAbsolutePath()));
             try {
                 Date date = fileNameFormat.parse(images.get(position).getName().replace(".png", ""));
                 holder.date.setText(dateFormat.format(date));

@@ -1,21 +1,28 @@
 package com.shl.checkpin.android.jobs;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 import com.shl.checkpin.android.dto.UploadConfDTO;
+import com.shl.checkpin.android.factories.Injector;
+import com.shl.checkpin.android.model.ImageDoc;
+import com.shl.checkpin.android.model.ImageDocFileService;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
 import com.shl.checkpin.android.requests.*;
 import com.shl.checkpin.android.utils.AndroidUtils;
 import com.shl.checkpin.android.utils.Constants;
+import com.shl.checkpin.android.utils.FileLocator;
 import org.apache.commons.io.IOUtils;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.mime.TypedInput;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.*;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -23,24 +30,52 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by sesshoumaru on 09.12.15.
  */
-public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
+public class ImageUploadTask extends AsyncTask<ImageDoc, String, Boolean> {
     private static final String TAG = "ImageUploadTask";
-    private final Context context;
+    private final ImageDocFileService imageDocService;
+    @Inject
+    Context context;
+
+    @Inject
+    SharedPreferences preferences;
+
+    @Inject
+    @Named(Constants.HIGHRES)
+    FileLocator fileLocator;
+
+    @Inject
+    @Named(Constants.IMAGE_FILE_DB)
+    FileLocator imageDocFileDbLocator;
+
+    private ImageDoc imageDoc;
+
     private String phoneNumber;
+
     private String googleToken;
 
     private RestAdapter authRestAdapter = new RestAdapter.Builder()
             .setEndpoint(Constants.SERVER_HOST + ":8080")
             .build();
-
     private RestAdapter uploadRestAdapter = new RestAdapter.Builder()
             .setEndpoint(Constants.SERVER_HOST)
             .build();
 
-    public ImageUploadTask(Context context, String phoneNumber, String googleToken) {
-        this.context = context;
-        this.phoneNumber = phoneNumber;
-        this.googleToken = googleToken;
+    public ImageUploadTask() {
+        Injector.inject(this);
+        this.phoneNumber = AndroidUtils.getPhoneNumber(context);
+        this.googleToken = preferences.getString(Constants.GCM_TOKEN, "");
+        this.imageDocService = new ImageDocFileService(imageDocFileDbLocator);
+    }
+
+    @Override
+    protected Boolean doInBackground(ImageDoc... params) {
+        this.imageDoc = params[0];
+        File source = fileLocator.locate(null, params[0].getName());
+        try {
+            return upload(source);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private boolean upload(File image) throws IOException {
@@ -59,7 +94,7 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
         fos.close();*/
         try {
             //authorization and registration
-            String version = "CheckPin Mobile Android v"+AndroidUtils.getVersion(context);
+            String version = "CheckPin Mobile Android v" + AndroidUtils.getVersion(context);
 
             UploadTokenRequest uploadTokenRequest = authRestAdapter.create(UploadTokenRequest.class);
             phoneNumber = phoneNumber.replace("+", "");
@@ -90,6 +125,8 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
                 uploadRestAdapter.create(UploadImageRequest.class).upload(version, uploadToken, chunkId, chunksTotal, typedBytes);
                 chunkId++;
             }
+            imageDoc.setStatus(ImageDoc.Status.SEND);
+            imageDocService.update(imageDoc);
             Log.i(TAG, "File " + image + " was uploaded");
             return true;
         } catch (Exception e) {
@@ -119,14 +156,14 @@ public class ImageUploadTask extends AsyncTask<File, String, Boolean> {
         AndroidUtils.toast(context, (message != null && message.length != 0 ? message[0] : ""), Toast.LENGTH_LONG);
     }
 
-    @Override
+    /*@Override
     protected Boolean doInBackground(File... params) {
         try {
             return upload(params[0]);
         } catch (IOException e) {
             return false;
         }
-    }
+    }*/
 
     @Override
     protected void onPostExecute(Boolean result) {

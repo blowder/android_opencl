@@ -2,8 +2,12 @@ package com.shl.checkpin.android.factories;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import dagger.Module;
 import dagger.Provides;
+
+import javax.inject.Singleton;
 
 /**
  * Created by sesshoumaru on 12.02.16.
@@ -25,4 +29,10 @@ public class ApplicationModule {
     public Context getContext() {
         return application.getApplicationContext();
     }
+
+    @Provides
+    public SharedPreferences getSharedPreferences() {
+        return PreferenceManager.getDefaultSharedPreferences(application.getApplicationContext());
+    }
+
 }
