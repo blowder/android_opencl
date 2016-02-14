@@ -11,10 +11,15 @@ import android.widget.Toast;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.canvas.CanvasView;
 import com.shl.checkpin.android.canvas.Circle;
+import com.shl.checkpin.android.factories.Injector;
 import com.shl.checkpin.android.jobs.ImageBillCutOutTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.jobs.OnTaskCompletedListener;
+import com.shl.checkpin.android.model.ImageDoc;
 import com.shl.checkpin.android.utils.*;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,7 +43,8 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
 
     private CanvasView drawView = null;
     private List<Circle> circles = new ArrayList<Circle>();
-    SharedPreferences sharedPreferences;
+    private ImageDoc imageDoc;
+
 
     private void initCircles() {
         int circleRadius = AndroidUtils.mmInPixels(this, 3);
@@ -68,8 +74,10 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
         public void onTaskCompleted() {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(SelectBillAreaActivity.this);
             boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
-            if (originImage != null && AndroidUtils.isInetConnected(SelectBillAreaActivity.this)
-                    && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false) && !offlineMode) {
+            if (offlineMode) {
+                imageDoc.setStatus(ImageDoc.Status.OFFLINE);
+            } else if (originImage != null && AndroidUtils.isInetConnected(SelectBillAreaActivity.this)
+                    && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)) {
                 String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
                 String userId = AndroidUtils.getPhoneNumber(SelectBillAreaActivity.this);
                 new ImageUploadTask(SelectBillAreaActivity.this, userId, gcmToken).execute(originImage);
@@ -94,11 +102,7 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.canvas_screen);
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        String imageName = getIntent().getStringExtra(BundleParams.IMAGE_SOURCE);
-        originImage = highResLocator.locate(null, imageName);
-        thumbnail = lowResLocator.locate(null, imageName);
+        EventBus.getDefault().register(this);
 
         initCircles();
 
@@ -106,10 +110,25 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
         finishButton.setOnClickListener(onFinishButtonPress);
 
         drawView = (CanvasView) findViewById(R.id.canvasView);
+        Injector.inject(drawView);
         drawView.setImageSource(originImage);
         drawView.setDimensionsOfPreview(AndroidUtils.mmInPixels(this, 20), AndroidUtils.mmInPixels(this, 20));
         drawView.setCircles(circles);
         drawView.setOnTouchListener(this);
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public void onImageTransferEvent(ImageDoc imageDoc) {
+        this.imageDoc = imageDoc;
+        originImage = highResLocator.locate(null, imageDoc.getName());
+        thumbnail = lowResLocator.locate(null, imageDoc.getName());
+        EventBus.getDefault().removeStickyEvent(imageDoc);
     }
 
     @Override

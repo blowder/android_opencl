@@ -48,7 +48,6 @@ public class CanvasView extends View {
     }
 
     public void setImageSource(File originImage) {
-        Injector.inject(this);
         this.originImage = originImage;
         this.thumbnail = lowResLocator.locate(null, originImage.getName());
     }
@@ -98,9 +97,9 @@ public class CanvasView extends View {
     }
 
     private void drawBackground(Canvas canvas) {
-        if (background == null)
+        if (background == null && thumbnail != null)
             new ImageThumbnailCreateTask(canvas.getWidth(), canvas.getHeight(), thumbnail, context, onBackgroundCreate).execute(originImage);
-        else
+        else if (background != null)
             background.draw(canvas);
     }
 

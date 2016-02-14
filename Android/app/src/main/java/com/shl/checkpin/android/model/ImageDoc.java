@@ -10,6 +10,7 @@ import java.util.Locale;
  */
 public class ImageDoc {
     public static final String NAME_PATTERN = "yyyyMMdd-HHmmss";
+    private OnImageDocChangeListener onSetStatusListener;
 
     public enum Status {
         NEW,
@@ -28,20 +29,20 @@ public class ImageDoc {
         this.status = Status.NEW;
     }
 
+    public OnImageDocChangeListener getOnSetStatusListener() {
+        return onSetStatusListener;
+    }
+
+    public void setOnSetStatusListener(OnImageDocChangeListener onSetStatusListener) {
+        this.onSetStatusListener = onSetStatusListener;
+    }
+
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public Date getCreationDate() {
         return creationDate;
-    }
-
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
     }
 
     public Status getStatus() {
@@ -50,5 +51,7 @@ public class ImageDoc {
 
     public void setStatus(Status status) {
         this.status = status;
+        if (onSetStatusListener != null)
+            onSetStatusListener.notify(this);
     }
 }

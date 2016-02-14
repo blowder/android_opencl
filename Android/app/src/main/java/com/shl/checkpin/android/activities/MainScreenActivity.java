@@ -12,7 +12,9 @@ import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
 import com.shl.checkpin.android.gcm.RegistrationIntentService;
 import com.shl.checkpin.android.model.ImageDoc;
+import com.shl.checkpin.android.model.OnImageDocChangeListener;
 import com.shl.checkpin.android.utils.*;
+import org.greenrobot.eventbus.EventBus;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -70,8 +72,14 @@ public class MainScreenActivity extends AbstractActivity {
         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE
                 && imageDoc != null
                 && resultCode == Activity.RESULT_OK) {
+            imageDoc.setOnSetStatusListener(new OnImageDocChangeListener() {
+                @Override
+                public void notify(ImageDoc imageDoc) {
+                    AndroidUtils.toast(MainScreenActivity.this, "Image changed status to " + imageDoc.getStatus());
+                }
+            });
             Intent selectBillIntent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
-            selectBillIntent.putExtra(BundleParams.IMAGE_SOURCE, imageDoc.getName());
+            EventBus.getDefault().postSticky(imageDoc);
             startActivityForResult(selectBillIntent, CANVAS_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     }

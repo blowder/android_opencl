@@ -1,7 +1,9 @@
 package com.shl.checkpin.android.activities;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import com.shl.checkpin.android.factories.Injector;
 
 /**
@@ -9,10 +11,12 @@ import com.shl.checkpin.android.factories.Injector;
  */
 public class AbstractActivity extends Activity {
     protected final String TAG = this.getClass().getSimpleName();
+    protected SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Injector.inject(this);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 }
