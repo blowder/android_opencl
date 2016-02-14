@@ -28,17 +28,20 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="New Text0000000"
                     android:id="@+id/dateView"
                     android:padding="1mm"
                     />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="New Text0000000"
                     android:id="@+id/timeView"
                     android:padding="1mm"
                     />
+                <ImageView
+                        android:layout_width="5mm"
+                        android:layout_height="5mm"
+                        android:id="@+id/status_icon"
+                        android:layout_gravity="right"/>
             </LinearLayout>
         
             </RelativeLayout>

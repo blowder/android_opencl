@@ -11,6 +11,7 @@ import com.shl.checkpin.android.dto.UploadConfDTO;
 import com.shl.checkpin.android.factories.Injector;
 import com.shl.checkpin.android.model.ImageDoc;
 import com.shl.checkpin.android.model.ImageDocFileService;
+import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
 import com.shl.checkpin.android.requests.*;
 import com.shl.checkpin.android.utils.AndroidUtils;
@@ -32,7 +33,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class ImageUploadTask extends AsyncTask<ImageDoc, String, Boolean> {
     private static final String TAG = "ImageUploadTask";
-    private final ImageDocFileService imageDocService;
     @Inject
     Context context;
 
@@ -44,8 +44,7 @@ public class ImageUploadTask extends AsyncTask<ImageDoc, String, Boolean> {
     FileLocator fileLocator;
 
     @Inject
-    @Named(Constants.IMAGE_FILE_DB)
-    FileLocator imageDocFileDbLocator;
+    ImageDocService imageDocService;
 
     private ImageDoc imageDoc;
 
@@ -64,7 +63,6 @@ public class ImageUploadTask extends AsyncTask<ImageDoc, String, Boolean> {
         Injector.inject(this);
         this.phoneNumber = AndroidUtils.getPhoneNumber(context);
         this.googleToken = preferences.getString(Constants.GCM_TOKEN, "");
-        this.imageDocService = new ImageDocFileService(imageDocFileDbLocator);
     }
 
     @Override

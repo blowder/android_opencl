@@ -17,7 +17,8 @@ public class HistoryViewHolder extends RecyclerView.ViewHolder {
     ImageView image;
     TextView date;
     TextView time;
-    File file;    
+    ImageView statusIcon;
+    File file;
 
     public HistoryViewHolder(View itemView) {
         super(itemView);
@@ -25,5 +26,6 @@ public class HistoryViewHolder extends RecyclerView.ViewHolder {
         image = (ImageView) itemView.findViewById(R.id.imageView2);
         date = (TextView) itemView.findViewById(R.id.dateView);
         time = (TextView) itemView.findViewById(R.id.timeView);
+        statusIcon = (ImageView) itemView.findViewById(R.id.status_icon);
     }
 }

@@ -9,3 +9,4 @@
 * https://www.dropbox.com/s/wjbnc929sv5swje/alpha_0.1.4.apk?dl=0
 * https://www.dropbox.com/s/n1bfqitpx88wmfc/alpha_0.1.5.apk?dl=0
 * https://www.dropbox.com/s/606km8sxe9o8mqx/alpha_0.1.6.apk?dl=0
+* https://www.dropbox.com/s/golqqesv22o9z54/alpha_0.1.7.apk?dl=0

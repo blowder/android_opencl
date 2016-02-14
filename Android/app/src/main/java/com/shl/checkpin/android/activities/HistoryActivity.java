@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,7 +19,6 @@ import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.model.ImageDoc;
-import com.shl.checkpin.android.model.ImageDocFileService;
 import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.utils.*;
 import android.graphics.Matrix;
@@ -75,8 +73,6 @@ public class HistoryActivity extends AbstractActivity {
         setContentView(R.layout.new_history_layuot);
         listView = (RecyclerView) findViewById(R.id.history_list);
         files = getImages();
-
-
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -210,13 +206,18 @@ public class HistoryActivity extends AbstractActivity {
             if (!icon.exists() && lowRes.exists()) {
                 int pixels = AndroidUtils.mmInPixels(HistoryActivity.this, 20);
                 new ImageThumbnailCreateTask(pixels, pixels, icon, HistoryActivity.this, null).execute(lowRes);
-            }else {
+            } else {
                 holder.image.setImageDrawable(Drawable.createFromPath(icon.getAbsolutePath()));
             }
             try {
-                Date date = fileNameFormat.parse(images.get(position).getName().replace(".png", ""));
+                String name = images.get(position).getName();
+                Date date = fileNameFormat.parse(name.replace(".png", ""));
                 holder.date.setText(dateFormat.format(date));
                 holder.time.setText(timeFormat.format(date));
+                ImageDoc imageDoc = imageDocService.findByName(name);
+                if (imageDoc != null)
+                    holder.statusIcon.setImageDrawable(getDrawableByType(imageDoc.getStatus(), true));
+
             } catch (ParseException e) {
                 //do not show text
             }
@@ -230,6 +231,22 @@ public class HistoryActivity extends AbstractActivity {
             });
         }
 
+        private Drawable getDrawableByType(ImageDoc.Status status, boolean white) {
+            int iconId = white ? R.drawable.check_status_not_sent_w : R.drawable.check_status_not_sent_b;
+            switch (status) {
+                case NEW:
+                    iconId = white ? R.drawable.check_status_not_sent_w : R.drawable.check_status_not_sent_b;
+                    break;
+                case OFFLINE:
+                    iconId = white ? R.drawable.check_status_offline_w : R.drawable.check_status_offline_b;
+                    break;
+                case SEND:
+                    iconId = white ? R.drawable.check_status_sent_w : R.drawable.check_status_sent_b;
+                    break;
+            }
+            return getResources().getDrawable(iconId);
+        }
+
         @Override
         public int getItemCount() {
             return images.size();
@@ -239,8 +256,10 @@ public class HistoryActivity extends AbstractActivity {
     private List<File> getImages() {
         List<File> files = new ArrayList<File>();
         for (File file : highResLocator.locate(null))
-            if (file.getName().matches(pattern))
+            if (file.getName().matches(pattern)) {
                 files.add(file);
+                saveToDbIfNotSaved(file);
+            }
         Collections.sort(files, new Comparator<File>() {
             @Override
             public int compare(File lhs, File rhs) {
@@ -248,5 +267,17 @@ public class HistoryActivity extends AbstractActivity {
             }
         });
         return files;
+    }
+
+    private void saveToDbIfNotSaved(File file) {
+        try {
+            if (imageDocService.findByName(file.getName()) == null) {
+                String date = file.getName().replace(".png", "");
+                Date creationDate = fileNameFormat.parse(date);
+                imageDocService.create(new ImageDoc(creationDate));
+            }
+        } catch (ParseException e) {
+            //skip this
+        }
     }
 }
