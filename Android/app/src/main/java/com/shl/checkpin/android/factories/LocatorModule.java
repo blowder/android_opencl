@@ -5,6 +5,7 @@ import android.os.Environment;
 
 import static com.shl.checkpin.android.utils.Constants.*;
 
+import com.shl.checkpin.android.utils.AndroidUtils;
 import com.shl.checkpin.android.utils.Constants;
 import com.shl.checkpin.android.utils.FileLocator;
 import com.shl.checkpin.android.utils.UniversalFsLocator;
@@ -19,18 +20,12 @@ import java.io.File;
  */
 @Module(library = true)
 public class LocatorModule {
-    private Application application;
+    private File storageRoot;
 
     public LocatorModule(Application application) {
-        this.application = application;
+        storageRoot = AndroidUtils.getStorage(application.getApplicationContext());
     }
 
-    private File getStorage() {
-        Boolean isSDPresent = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
-        return isSDPresent
-                ? Environment.getExternalStorageDirectory()
-                : application.getApplicationContext().getFilesDir();
-    }
 
     @Provides
     @Named(HIGHRES)
@@ -58,8 +53,8 @@ public class LocatorModule {
 
     private FileLocator createDirsAndLocator(String contextFolder, String imageFolder) {
         File root = contextFolder != null && !contextFolder.isEmpty()
-                ? new File(getStorage(), contextFolder)
-                : getStorage();
+                ? new File(storageRoot, contextFolder)
+                : storageRoot;
 
         root = new File(root, imageFolder);
         if (!root.exists())

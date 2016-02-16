@@ -33,6 +33,7 @@ import java.util.Date;
 public class MainScreenActivity extends AbstractActivity {
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 200;
     private static final int CANVAS_IMAGE_ACTIVITY_REQUEST_CODE = 300;
+    private static final String IMAGE_NAME = "image.name";
     private ImageDoc imageDoc = null;
 
     @Inject
@@ -116,7 +117,7 @@ public class MainScreenActivity extends AbstractActivity {
                 offlineMode = !offlineMode;
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putBoolean(Constants.OFFLINE_MODE, offlineMode);
-                editor.commit();
+                editor.apply();
                 item.setChecked(offlineMode);
                 return true;
             case R.id.menu_settings:
@@ -134,6 +135,20 @@ public class MainScreenActivity extends AbstractActivity {
         cameraButton.setOnClickListener(nativeCameraIntend);
         historyButton.setOnClickListener(historyButtonListener);
         aboutButton.setOnClickListener(aboutButtonListener);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        if (imageDoc != null)
+            savedInstanceState.putString(IMAGE_NAME, imageDoc.getName());
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        String imageName = savedInstanceState.getString(IMAGE_NAME);
+        imageDoc = imageDocService.findByName(imageName);
     }
 
     @Override

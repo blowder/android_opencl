@@ -1,11 +1,13 @@
 package com.shl.checkpin.android.utils;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Environment;
 import android.support.v7.app.AlertDialog;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
@@ -14,6 +16,7 @@ import android.view.Display;
 import android.widget.Toast;
 import com.shl.checkpin.android.R;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -97,5 +100,11 @@ public class AndroidUtils {
              Log.e(TAG, "getVersion() returns dummy version");
             return "dummy";
         }
+    }
+    public static File getStorage(Context context) {
+        Boolean isSDPresent = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+        return isSDPresent
+                ? Environment.getExternalStorageDirectory()
+                : context.getFilesDir();
     }
 }
