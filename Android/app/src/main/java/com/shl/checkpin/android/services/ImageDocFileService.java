@@ -1,6 +1,8 @@
-package com.shl.checkpin.android.model;
+package com.shl.checkpin.android.services;
 
 import android.util.Log;
+import com.shl.checkpin.android.model.ImageDoc;
+import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.utils.FileLocator;
 import org.json.JSONObject;
 

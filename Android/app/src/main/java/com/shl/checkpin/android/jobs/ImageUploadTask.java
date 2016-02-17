@@ -2,18 +2,16 @@ package com.shl.checkpin.android.jobs;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 import com.shl.checkpin.android.dto.UploadConfDTO;
 import com.shl.checkpin.android.factories.Injector;
 import com.shl.checkpin.android.model.ImageDoc;
-import com.shl.checkpin.android.model.ImageDocFileService;
 import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.opencv.ImageProcessingService;
 import com.shl.checkpin.android.requests.*;
+import com.shl.checkpin.android.services.OnUploadEvent;
 import com.shl.checkpin.android.utils.AndroidUtils;
 import com.shl.checkpin.android.utils.Constants;
 import com.shl.checkpin.android.utils.FileLocator;
@@ -26,7 +24,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.*;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by sesshoumaru on 09.12.15.
@@ -35,7 +32,6 @@ public class ImageUploadTask extends AsyncTask<ImageDoc, String, Boolean> {
     private static final String TAG = "ImageUploadTask";
     @Inject
     Context context;
-
     @Inject
     SharedPreferences preferences;
 
@@ -52,6 +48,10 @@ public class ImageUploadTask extends AsyncTask<ImageDoc, String, Boolean> {
 
     private String googleToken;
 
+    private OnUploadEvent successCallback;
+    private OnUploadEvent failCallback;
+    private File source;
+
     private RestAdapter authRestAdapter = new RestAdapter.Builder()
             .setEndpoint(Constants.SERVER_HOST + ":8080")
             .build();
@@ -65,10 +65,18 @@ public class ImageUploadTask extends AsyncTask<ImageDoc, String, Boolean> {
         this.googleToken = preferences.getString(Constants.GCM_TOKEN, "");
     }
 
+    public ImageUploadTask(OnUploadEvent successCallback, OnUploadEvent failCallback) {
+        Injector.inject(this);
+        this.phoneNumber = AndroidUtils.getPhoneNumber(context);
+        this.googleToken = preferences.getString(Constants.GCM_TOKEN, "");
+        this.successCallback = successCallback;
+        this.failCallback = failCallback;
+    }
+
     @Override
     protected Boolean doInBackground(ImageDoc... params) {
         this.imageDoc = params[0];
-        File source = fileLocator.locate(null, params[0].getName());
+        source = fileLocator.locate(null, params[0].getName());
         try {
             return upload(source);
         } catch (IOException e) {
@@ -165,6 +173,11 @@ public class ImageUploadTask extends AsyncTask<ImageDoc, String, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
+        if(result)
+            successCallback.executeFor(source);
+        else
+            failCallback.executeFor(source);
+
         if (result)
             AndroidUtils.toast(context, "Image was sent.");
     }

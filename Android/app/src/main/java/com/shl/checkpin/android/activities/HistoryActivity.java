@@ -20,6 +20,7 @@ import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.model.ImageDoc;
 import com.shl.checkpin.android.model.ImageDocService;
+import com.shl.checkpin.android.services.UploadService;
 import com.shl.checkpin.android.utils.*;
 import android.graphics.Matrix;
 import android.content.Intent;
@@ -65,6 +66,7 @@ public class HistoryActivity extends AbstractActivity {
     private RecyclerView.LayoutManager mLayoutManager;
     private static Bitmap sendIcon;
     private static Bitmap deleteIcon;
+    private UploadService uploadService = new UploadService();
 
 
     @Override
@@ -152,7 +154,9 @@ public class HistoryActivity extends AbstractActivity {
                             && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)
                             && !offlineMode) {
                         ImageDoc imageDoc = imageDocService.findByName(source.getName());
-                        new ImageUploadTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, imageDoc);
+                        uploadService.addForUpload(imageDoc);
+                        uploadService.uploadAll();
+                        //new ImageUploadTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, imageDoc);
                     } else {
                         AndroidUtils.toast(HistoryActivity.this, "Sorry there is no Internet connection or you try to send existed file", Toast.LENGTH_LONG);
                     }

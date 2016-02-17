@@ -1,6 +1,6 @@
 package com.shl.checkpin.android.factories;
 
-import com.shl.checkpin.android.model.ImageDocFileService;
+import com.shl.checkpin.android.services.ImageDocFileService;
 import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.utils.Constants;
 import com.shl.checkpin.android.utils.FileLocator;

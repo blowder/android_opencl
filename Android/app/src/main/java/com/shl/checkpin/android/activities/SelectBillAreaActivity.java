@@ -14,7 +14,6 @@ import com.shl.checkpin.android.jobs.ImageBillCutOutTask;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.jobs.OnTaskCompletedListener;
 import com.shl.checkpin.android.model.ImageDoc;
-import com.shl.checkpin.android.model.ImageDocFileService;
 import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.utils.*;
 
@@ -81,7 +80,7 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
                 //String gcmToken = sharedPreferences.getString(Constants.GCM_TOKEN, "");
                 //String userId = AndroidUtils.getPhoneNumber(SelectBillAreaActivity.this);
                 new ImageUploadTask().execute(imageDoc);
-                //new ImageUploadTask(SelectBillAreaActivity.this, userId, gcmToken).execute(originImage);
+                //new ImageUploadTask(SelectBillAreaActivity.this, userId, gcmToken).executeFor(originImage);
             } else {
                 AndroidUtils.toast(SelectBillAreaActivity.this, "Image was not sent, you can send it from history page manually", Toast.LENGTH_LONG);
             }

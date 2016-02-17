@@ -23,6 +23,7 @@ public class CheckPinApp extends Application {
                 new ViewModule(),
                 new ActivityModule(),
                 new AsynkTaskModule(),
-                new ImageDocServiceModule());
+                new ImageDocServiceModule(),
+                new UploadServiceModule());
     }
 }
