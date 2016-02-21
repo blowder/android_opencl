@@ -14,12 +14,17 @@ public class ImageDoc {
     public enum Status {
         NEW,
         OFFLINE,
-        SEND
+        SEND,
+        RECOGNIZED,
+        UNRECOGNIZED
     }
 
     private String name;
     private Date creationDate;
     private Status status;
+    private double amount;
+    private String retailer;
+    private String url;
 
     public ImageDoc(Date creationDate) {
         DateFormat nameFormat = new SimpleDateFormat(NAME_PATTERN, Locale.getDefault());
@@ -50,6 +55,30 @@ public class ImageDoc {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public String getRetailer() {
+        return retailer;
+    }
+
+    public void setRetailer(String retailer) {
+        this.retailer = retailer;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     @Override

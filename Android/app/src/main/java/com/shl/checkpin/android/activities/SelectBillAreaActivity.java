@@ -2,6 +2,7 @@ package com.shl.checkpin.android.activities;
 
 import android.graphics.*;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -42,7 +43,6 @@ public class SelectBillAreaActivity extends AbstractActivity implements View.OnT
     private CanvasView drawView = null;
     private List<Circle> circles = new ArrayList<Circle>();
     private ImageDoc imageDoc;
-
 
 
     private void initCircles() {

@@ -247,6 +247,12 @@ public class HistoryActivity extends AbstractActivity {
                 case SEND:
                     iconId = white ? R.drawable.check_status_sent_w : R.drawable.check_status_sent_b;
                     break;
+                case RECOGNIZED:
+                    iconId = white ? R.drawable.check_status_ident_w : R.drawable.check_status_ident_b;
+                    break;
+                case UNRECOGNIZED:
+                    iconId = white ? R.drawable.check_status_unkn_w : R.drawable.check_status_unkn_b;
+                    break;
             }
             return getResources().getDrawable(iconId);
         }

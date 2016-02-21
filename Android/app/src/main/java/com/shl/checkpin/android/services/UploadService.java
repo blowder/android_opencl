@@ -2,6 +2,7 @@ package com.shl.checkpin.android.services;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
 import com.shl.checkpin.android.factories.Injector;
 import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.model.ImageDoc;
@@ -37,7 +38,7 @@ public class UploadService {
         public void executeFor(File image) {
             ImageDoc imageDoc = imageDocService.findByName(image.getName());
             filesMap.remove(imageDoc);
-            AndroidUtils.toast(context, TAG + ": file " + image + " successfully uploaded");
+            //AndroidUtils.toast(context, TAG + ": file " + image + " successfully uploaded");
         }
     };
 
@@ -46,7 +47,7 @@ public class UploadService {
         public void executeFor(File image) {
             ImageDoc imageDoc = imageDocService.findByName(image.getName());
             filesMap.put(imageDoc, UploadStatus.NEW);
-            AndroidUtils.toast(context, TAG + ": file " + image + " failed during upload");
+            //AndroidUtils.toast(context, TAG + ": file " + image + " failed during upload");
         }
     };
 
@@ -55,17 +56,19 @@ public class UploadService {
     }
 
     public void addForUpload(ImageDoc source) {
-        filesMap.put(source, UploadStatus.NEW);
-        AndroidUtils.toast(context, TAG + ": file " + source.getName() + " added to upload queue");
+        if(!UploadStatus.UPLOADING.equals(filesMap.get(source)))
+            filesMap.put(source, UploadStatus.NEW);
+        //AndroidUtils.toast(context, TAG + ": file " + source.getName() + " added to upload queue");
     }
 
     public synchronized void uploadAll() {
-        AndroidUtils.toast(context, TAG + ": uploading process started, " + filesMap.size() + " files in upload queue");
+        //AndroidUtils.toast(context, TAG + ": uploading process started, " + filesMap.size() + " files in upload queue");
         Iterator<Map.Entry<ImageDoc, UploadStatus>> iterator = filesMap.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<ImageDoc, UploadStatus> entry = iterator.next();
-            if (entry.getValue().equals(UploadStatus.NEW)) {
+            if (UploadStatus.NEW.equals(entry.getValue())) {
                 new ImageUploadTask(successCallback, failCallback).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, entry.getKey());
+                Log.e(TAG, "call imageUploadTask " + entry.getKey());
                 filesMap.put(entry.getKey(), UploadStatus.UPLOADING);
             }
         }

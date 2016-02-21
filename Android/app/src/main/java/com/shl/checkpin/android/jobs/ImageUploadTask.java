@@ -173,9 +173,9 @@ public class ImageUploadTask extends AsyncTask<ImageDoc, String, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
-        if(result)
+        if (result && successCallback != null)
             successCallback.executeFor(source);
-        else
+        if (!result && failCallback != null)
             failCallback.executeFor(source);
 
         if (result)
