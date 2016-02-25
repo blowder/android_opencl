@@ -9,10 +9,9 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.Toast;
 import android.graphics.Canvas;
 import com.shl.checkpin.android.R;
@@ -74,6 +73,10 @@ public class HistoryActivity extends AbstractActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.new_history_layuot);
         listView = (RecyclerView) findViewById(R.id.history_list);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
         files = getImages();
 
         // use this setting to improve performance if you know that changes
