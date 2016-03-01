@@ -1,6 +1,6 @@
 package com.shl.checkpin.android;
 
-import android.app.Application;
+import android.support.multidex.MultiDexApplication;
 import com.shl.checkpin.android.factories.*;
 
 import java.util.Arrays;
@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by sesshoumaru on 10.02.16.
  */
-public class CheckPinApp extends Application {
+public class CheckPinApp extends MultiDexApplication {
     @Override
     public void onCreate() {
         super.onCreate();

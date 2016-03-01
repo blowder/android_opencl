@@ -77,6 +77,8 @@ public class MainScreenActivity extends AbstractActivity {
         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE
                 && imageDoc != null
                 && resultCode == Activity.RESULT_OK) {
+            imageDoc.setStatus(ImageDoc.Status.NEW);
+            imageDocService.update(imageDoc);
             Intent selectBillIntent = new Intent(MainScreenActivity.this, SelectBillAreaActivity.class);
             selectBillIntent.putExtra(BundleParams.IMAGE_SOURCE, imageDoc.getName());
             startActivityForResult(selectBillIntent, CANVAS_IMAGE_ACTIVITY_REQUEST_CODE);
