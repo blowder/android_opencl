@@ -6,10 +6,8 @@
     <string name="main_screen_history">History</string>
     <string name="main_screen_button_width">250px</string>
     <string name="canvas_screen_finish_button">Finish</string>
-    <string-array name="catlist">
-        <item>Барсик</item>
-        <item>Мурзик</item>
-        <item>Васька</item>
-        <item>Рыжик</item>
+    <string-array name="filterTypes">
+        <item>New first</item>
+        <item>Old first</item>
     </string-array>
 </resources>

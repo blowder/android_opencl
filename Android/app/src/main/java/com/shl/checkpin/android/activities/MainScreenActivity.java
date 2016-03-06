@@ -2,10 +2,14 @@ package com.shl.checkpin.android.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import com.shl.checkpin.android.R;
@@ -13,19 +17,19 @@ import com.shl.checkpin.android.gcm.MyInstanceIDListenerService;
 import com.shl.checkpin.android.gcm.RegistrationIntentService;
 import com.shl.checkpin.android.model.ImageDoc;
 import com.shl.checkpin.android.model.ImageDocService;
-import com.shl.checkpin.android.utils.*;
+import com.shl.checkpin.android.utils.AndroidUtils;
+import com.shl.checkpin.android.utils.BundleParams;
+import com.shl.checkpin.android.utils.Constants;
+import com.shl.checkpin.android.utils.FileLocator;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import android.content.SharedPreferences;
-import android.view.MenuItem;
-import android.view.Menu;
-import android.preference.PreferenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 
 /*
  * Created by sesshoumaru on 19.09.15.
@@ -42,19 +46,38 @@ public class MainScreenActivity extends AbstractActivity {
 
     @Inject
     ImageDocService imageDocService;
+    @Inject
+    @Named(Constants.IMAGE_FILE_DB)
+    ImageDocService oldDocService;
 
     private View.OnClickListener aboutButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             String message = "CheckPin v" + AndroidUtils.getVersion(MainScreenActivity.this);
             AndroidUtils.toast(getApplicationContext(), message);
+            List<ImageDoc> docs = imageDocService.findAll();
+            for (ImageDoc doc : docs)
+                if (ImageDoc.Status.EMPTY.equals(doc.getStatus()))
+                    imageDocService.delete(doc);
+
+            List<File> files = highResLocator.locate(null);
+
+            for (File file : files) {
+                ImageDoc dbDoc = imageDocService.findByName(file.getName());
+                if (dbDoc == null) {
+                    ImageDoc oldDoc = oldDocService.findByName(file.getName());
+                    if (oldDoc != null && !oldDoc.getStatus().equals(ImageDoc.Status.NEW))
+                        imageDocService.create(oldDoc);
+                }
+
+            }
         }
     };
 
     private View.OnClickListener historyButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(MainScreenActivity.this, HistoryActivity2.class);
+            Intent intent = new Intent(MainScreenActivity.this, HistoryActivity.class);
             MainScreenActivity.this.startActivity(intent);
         }
     };

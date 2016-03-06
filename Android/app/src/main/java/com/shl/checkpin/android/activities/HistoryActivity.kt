@@ -9,13 +9,14 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.v7.app.ActionBar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.Spinner
 import android.widget.Toast
 import com.shl.checkpin.android.R
 import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask
@@ -33,7 +34,9 @@ import javax.inject.Named
 /**
  * Created by sesshoumaru on 06.03.16.
  */
-class HistoryActivity2 : AbstractActivity() {
+class HistoryActivity : AbstractActivity() {
+    private val newFirst = 0;
+    private val oldFirst = 1;
 
     @field:[Inject Named(Constants.HIGHRES)]
     lateinit var highResLocator: FileLocator
@@ -49,12 +52,23 @@ class HistoryActivity2 : AbstractActivity() {
 
     private lateinit var listView: RecyclerView
 
+    val onFilterClick = object : AdapterView.OnItemSelectedListener {
+        override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, id: Long) {
+            listView.adapter = HistoryViewAdapter(getImages(position))
+            listView.invalidate()
+        }
+
+        override fun onNothingSelected(p0: AdapterView<*>?) {
+            //do nothing
+        }
+    }
+
     private val onIconClickListener = OnIconClickListener { name ->
         val intent = Intent()
-        intent.action = android.content.Intent.ACTION_VIEW
+        intent.action = Intent.ACTION_VIEW
         val uri = Uri.fromFile(highResLocator.locate(null, name))
         intent.setDataAndType(uri, "image/*")
-        this@HistoryActivity2.startActivity(intent)
+        this@HistoryActivity.startActivity(intent)
     }
 
     private val simpleItemTouchCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
@@ -104,16 +118,16 @@ class HistoryActivity2 : AbstractActivity() {
                 val imageDoc = (viewHolder as HistoryViewHolder).imageDoc
                 val position = adapter.getItemsList().indexOf(imageDoc)
                 adapter.notifyItemChanged(position)
-                val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this@HistoryActivity2)
+                val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this@HistoryActivity)
                 val offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false)
-                if (AndroidUtils.isInetConnected(this@HistoryActivity2)
+                if (AndroidUtils.isInetConnected(this@HistoryActivity)
                         && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)
                         && !offlineMode) {
                     uploadService.addForUpload(imageDoc)
                     uploadService.uploadAll()
                     //new ImageUploadTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, imageDoc);
                 } else {
-                    AndroidUtils.toast(this@HistoryActivity2, "Sorry there is no Internet connection or you try to send existed file", Toast.LENGTH_LONG)
+                    AndroidUtils.toast(this@HistoryActivity, "Sorry there is no Internet connection or you try to send existed file", Toast.LENGTH_LONG)
                 }
             }
             if (swipeDir == ItemTouchHelper.LEFT) {
@@ -133,25 +147,19 @@ class HistoryActivity2 : AbstractActivity() {
         }
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.history_page_layuot)
-        //setupToolbar()
+        var spinner = findViewById(R.id.spinner_nav) as Spinner
+        spinner.onItemSelectedListener = onFilterClick
+
         listView = findViewById(R.id.history_list) as RecyclerView
         listView.setHasFixedSize(true)
         listView.layoutManager = LinearLayoutManager(this)
-        listView.adapter = HistoryViewAdapter(getImages())
-
+        listView.adapter = HistoryViewAdapter(getImages(newFirst))
         ItemTouchHelper(simpleItemTouchCallback).attachToRecyclerView(listView)
     }
-
-/*    private fun setupToolbar() {
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
-        setSupportActionBar(toolbar)
-        if (supportActionBar != null)
-            (supportActionBar as ActionBar).setDisplayShowTitleEnabled(false)
-    }*/
-
 
     internal inner class HistoryViewAdapter : RecyclerView.Adapter<HistoryViewHolder> {
         private val iconSizeInMm = 20
@@ -190,8 +198,8 @@ class HistoryActivity2 : AbstractActivity() {
             if (icon.exists())
                 holder.image.setImageDrawable(Drawable.createFromPath(icon.absolutePath))
             else if (lowRes.exists()) {
-                val pixels = AndroidUtils.mmInPixels(this@HistoryActivity2, iconSizeInMm)
-                ImageThumbnailCreateTask(pixels, pixels, icon, this@HistoryActivity2, { this.notifyDataSetChanged() }).execute(lowRes)
+                val pixels = AndroidUtils.mmInPixels(this@HistoryActivity, iconSizeInMm)
+                ImageThumbnailCreateTask(pixels, pixels, icon, this@HistoryActivity, { this.notifyDataSetChanged() }).execute(lowRes)
             }
         }
 
@@ -213,13 +221,16 @@ class HistoryActivity2 : AbstractActivity() {
         }
     }
 
-    private fun getImages(): List<ImageDoc> {
+    private fun getImages(sortType: Int): List<ImageDoc> {
         val result = imageDocService.findAll()
         val iterator = result.iterator()
         while (iterator.hasNext())
             if (ImageDoc.Status.EMPTY == iterator.next().status)
                 iterator.remove()
-        Collections.sort(result) { lhs, rhs -> rhs.creationDate.compareTo(lhs.creationDate) }
+        if (sortType == newFirst)
+            Collections.sort(result) { lhs, rhs -> rhs.creationDate.compareTo(lhs.creationDate) }
+        else if (sortType == oldFirst)
+            Collections.sort(result) { lhs, rhs -> lhs.creationDate.compareTo(rhs.creationDate) }
         return result
     }
 
