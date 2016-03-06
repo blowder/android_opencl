@@ -3,12 +3,14 @@ package com.shl.checkpin.android.services;
 import android.util.Log;
 import com.shl.checkpin.android.model.ImageDoc;
 import com.shl.checkpin.android.model.ImageDocService;
+import com.shl.checkpin.android.services.mappers.ImageDocMapper;
 import com.shl.checkpin.android.utils.FileLocator;
-import org.json.JSONException;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -24,59 +26,30 @@ public class ImageDocFileService implements ImageDocService {
 
     @Override
     public void create(ImageDoc imageDoc) {
+        FileWriter fileWriter = null;
         try {
-            JSONObject json = new JSONObject();
-            json.put(ImageDoc.NAME, imageDoc.getName());
-            json.put(ImageDoc.CREATION_DATE, imageDoc.getCreationDate().getTime());
-            json.put(ImageDoc.STATUS, imageDoc.getStatus());
-            json.put(ImageDoc.AMOUNT, imageDoc.getAmount());
-            json.put(ImageDoc.URL, imageDoc.getUrl());
-            json.put(ImageDoc.RETAILER, imageDoc.getRetailer());
-
-            File source = locator.locate(null, imageDoc.getName());
-            source.delete();
-            FileWriter fileWriter = new FileWriter(source);
+            JSONObject json = ImageDocMapper.INSTANCE.map2Json(imageDoc);
+            fileWriter = new FileWriter(locator.locate(null, imageDoc.getName()));
             fileWriter.write(json.toString());
-            fileWriter.flush();
-            fileWriter.close();
         } catch (Exception e) {
             Log.e(TAG, "Could not create " + imageDoc);
+        } finally {
+            IOUtils.closeQuietly(fileWriter);
         }
     }
 
     @Override
     public ImageDoc findByName(String name) {
-        ImageDoc result = null;
-        File source = locator.locate(null, name);
         try {
-            String content = new Scanner(source).useDelimiter("\\Z").next();
+            String content = new Scanner(locator.locate(null, name))
+                    .useDelimiter("\\Z")
+                    .next();
             JSONObject object = new JSONObject(content);
-            long time = object.getLong(ImageDoc.CREATION_DATE);
-            result = new ImageDoc(new Date(time));
-            result.setStatus(ImageDoc.Status.valueOf(object.getString(ImageDoc.STATUS)));
-            double amount = 0.0;
-            try {
-                amount = Double.parseDouble(object.getString(ImageDoc.AMOUNT));
-            } catch (JSONException e) {
-                //skip this
-            } catch (NumberFormatException e) {
-                //skip this
-            }
-            result.setAmount(amount);
-            try {
-                result.setUrl(object.getString(ImageDoc.URL));
-            } catch (JSONException e) {
-                //skip this
-            }
-            try {
-                result.setRetailer(object.getString(ImageDoc.RETAILER));
-            } catch (JSONException e) {
-                //skip this
-            }
+            return ImageDocMapper.INSTANCE.map(object);
         } catch (Exception e) {
             Log.e(TAG, "Could not find " + name, e);
+            return null;
         }
-        return result;
     }
 
     @Override
@@ -87,5 +60,20 @@ public class ImageDocFileService implements ImageDocService {
     @Override
     public void delete(ImageDoc imageDoc) {
         locator.locate(null, imageDoc.getName()).delete();
+    }
+
+    @Override
+    public List<ImageDoc> findAll() {
+        List<File> files = locator.locate(null);
+        List<ImageDoc> result = new ArrayList<ImageDoc>();
+        for (File source : files)
+            try {
+                String content = new Scanner(source).useDelimiter("\\Z").next();
+                JSONObject json = new JSONObject(content);
+                result.add(ImageDocMapper.INSTANCE.map(json));
+            } catch (Exception e) {
+                Log.e(TAG, "Could not parse to json " + source, e);
+            }
+        return result;
     }
 }

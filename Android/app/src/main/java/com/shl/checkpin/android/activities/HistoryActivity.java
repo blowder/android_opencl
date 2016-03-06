@@ -4,7 +4,6 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,7 +15,6 @@ import android.widget.Toast;
 import android.graphics.Canvas;
 import com.shl.checkpin.android.R;
 import com.shl.checkpin.android.jobs.ImageThumbnailCreateTask;
-import com.shl.checkpin.android.jobs.ImageUploadTask;
 import com.shl.checkpin.android.model.ImageDoc;
 import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.services.UploadService;
@@ -27,14 +25,12 @@ import android.net.Uri;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.text.ParseException;
 
 
 import java.io.File;
 import java.util.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by sesshoumaru on 16.01.16.
@@ -53,12 +49,10 @@ public class HistoryActivity extends AbstractActivity {
     @Inject
     ImageDocService imageDocService;
 
-    private static final String pattern = "^[0-9]{8}-[0-9]{6}\\.png$";
-    private final DateFormat fileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
     private final DateFormat dateFormat = new SimpleDateFormat("d MMMM yyyy");
     private final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 
-    private List<File> files;
+    private List<ImageDoc> imageDocs;
     private MyAdapter adapter;
 
     private RecyclerView listView;
@@ -71,13 +65,13 @@ public class HistoryActivity extends AbstractActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.new_history_layuot);
+        setContentView(R.layout.history_page_layuot);
         listView = (RecyclerView) findViewById(R.id.history_list);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        files = getImages();
+        imageDocs = getImages();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -86,19 +80,20 @@ public class HistoryActivity extends AbstractActivity {
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
         listView.setLayoutManager(mLayoutManager);
+
         OnIconClickListener onIconClickListener = new OnIconClickListener() {
-            public void onIconClick(View view, int position) {
+            public void onIconClick(String name) {
                 Intent intent = new Intent();
                 intent.setAction(android.content.Intent.ACTION_VIEW);
-                Uri uri = Uri.fromFile(files.get(position));
+                Uri uri = Uri.fromFile(highResLocator.locate(null, name));
                 intent.setDataAndType(uri, "image/*");
                 HistoryActivity.this.startActivity(intent);
             }
         };
 
-        adapter = new MyAdapter(files, onIconClickListener);
-
+        adapter = new MyAdapter(imageDocs, onIconClickListener);
         listView.setAdapter(adapter);
+
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
 
             @Override
@@ -148,15 +143,14 @@ public class HistoryActivity extends AbstractActivity {
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
                 if (swipeDir == ItemTouchHelper.RIGHT) {
-                    File source = ((HistoryViewHolder) viewHolder).file;
-                    int position = files.indexOf(source);
+                    ImageDoc imageDoc = ((HistoryViewHolder) viewHolder).getImageDoc();
+                    int position = imageDocs.indexOf(imageDoc);
                     adapter.notifyItemChanged(position);
                     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(HistoryActivity.this);
                     boolean offlineMode = sharedPreferences.getBoolean(Constants.OFFLINE_MODE, false);
                     if (AndroidUtils.isInetConnected(HistoryActivity.this)
                             && sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false)
                             && !offlineMode) {
-                        ImageDoc imageDoc = imageDocService.findByName(source.getName());
                         uploadService.addForUpload(imageDoc);
                         uploadService.uploadAll();
                         //new ImageUploadTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, imageDoc);
@@ -165,19 +159,20 @@ public class HistoryActivity extends AbstractActivity {
                     }
                 }
                 if (swipeDir == ItemTouchHelper.LEFT) {
-                    File source = ((HistoryViewHolder) viewHolder).file;
-                    File lowRes = lowResLocator.locate(null, source.getName());
-                    File icon = iconsLocator.locate(null, source.getName());
-                    int position = files.indexOf(source);
-                    files.remove(source);
-                    source.delete();
+                    ImageDoc imageDoc = ((HistoryViewHolder) viewHolder).getImageDoc();
+                    File highRes = highResLocator.locate(null, imageDoc.getName());
+                    File lowRes = lowResLocator.locate(null, imageDoc.getName());
+                    File icon = iconsLocator.locate(null, imageDoc.getName());
+                    int position = imageDocs.indexOf(imageDoc);
+                    imageDocService.delete(imageDoc);
+                    imageDocs.remove(imageDoc);
+                    highRes.delete();
                     lowRes.delete();
                     icon.delete();
                     adapter.notifyItemRemoved(position);
-                    adapter.notifyItemRangeChanged(position, files.size());
+                    adapter.notifyItemRangeChanged(position, imageDocs.size());
                 }
             }
-
         };
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
@@ -187,15 +182,15 @@ public class HistoryActivity extends AbstractActivity {
     }
 
     class MyAdapter extends RecyclerView.Adapter<HistoryViewHolder> {
-        private final List<File> images;
+        private final List<ImageDoc> images;
         private OnIconClickListener listener;
 
 
-        public MyAdapter(List<File> images) {
+        public MyAdapter(List<ImageDoc> images) {
             this.images = images;
         }
 
-        public MyAdapter(List<File> images, OnIconClickListener listener) {
+        public MyAdapter(List<ImageDoc> images, OnIconClickListener listener) {
             this.images = images;
             this.listener = listener;
         }
@@ -214,26 +209,23 @@ public class HistoryActivity extends AbstractActivity {
                 int pixels = AndroidUtils.mmInPixels(HistoryActivity.this, 20);
                 new ImageThumbnailCreateTask(pixels, pixels, icon, HistoryActivity.this, null).execute(lowRes);
             } else {
-                holder.image.setImageDrawable(Drawable.createFromPath(icon.getAbsolutePath()));
+                holder.getImage().setImageDrawable(Drawable.createFromPath(icon.getAbsolutePath()));
             }
-            try {
-                String name = images.get(position).getName();
-                Date date = fileNameFormat.parse(name.replace(".png", ""));
-                holder.date.setText(dateFormat.format(date));
-                holder.time.setText(timeFormat.format(date));
-                ImageDoc imageDoc = imageDocService.findByName(name);
-                if (imageDoc != null)
-                    holder.statusIcon.setImageDrawable(getDrawableByType(imageDoc.getStatus(), true));
 
-            } catch (ParseException e) {
-                //do not show text
-            }
-            holder.file = images.get(position);
+            String name = images.get(position).getName();
+            holder.getDate().setText(dateFormat.format(images.get(position).getCreationDate()));
+            holder.getTime().setText(timeFormat.format(images.get(position).getCreationDate()));
+            final ImageDoc imageDoc = imageDocService.findByName(name);
+            if (imageDoc != null)
+                holder.getStatusIcon().setImageDrawable(getDrawableByType(imageDoc.getStatus(), true));
+
+            holder.setImageDoc(images.get(position));
             final int index = position;
-            holder.image.setOnClickListener(new View.OnClickListener() {
+            holder.getImage().setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    listener.onIconClick(v, index);
+                    if (imageDoc != null)
+                        listener.onIconClick(imageDoc.getName());
                 }
             });
         }
@@ -266,31 +258,18 @@ public class HistoryActivity extends AbstractActivity {
         }
     }
 
-    private List<File> getImages() {
-        List<File> files = new ArrayList<File>();
-        for (File file : highResLocator.locate(null))
-            if (file.getName().matches(pattern)) {
-                files.add(file);
-                saveToDbIfNotSaved(file);
-            }
-        Collections.sort(files, new Comparator<File>() {
+    private List<ImageDoc> getImages() {
+        List<ImageDoc> result = imageDocService.findAll();
+        Iterator<ImageDoc> iterator = result.iterator();
+        while (iterator.hasNext())
+            if (ImageDoc.Status.EMPTY.equals(iterator.next().getStatus()))
+                iterator.remove();
+        Collections.sort(result, new Comparator<ImageDoc>() {
             @Override
-            public int compare(File lhs, File rhs) {
-                return new Date(rhs.lastModified()).compareTo(new Date(lhs.lastModified()));
+            public int compare(ImageDoc lhs, ImageDoc rhs) {
+                return rhs.getCreationDate().compareTo(lhs.getCreationDate());
             }
         });
-        return files;
-    }
-
-    private void saveToDbIfNotSaved(File file) {
-        try {
-            if (imageDocService.findByName(file.getName()) == null) {
-                String date = file.getName().replace(".png", "");
-                Date creationDate = fileNameFormat.parse(date);
-                imageDocService.create(new ImageDoc(creationDate));
-            }
-        } catch (ParseException e) {
-            //skip this
-        }
+        return result;
     }
 }

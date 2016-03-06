@@ -9,6 +9,10 @@ import com.shl.checkpin.android.model.ImageDoc;
 import com.shl.checkpin.android.model.ImageDocService;
 import com.shl.checkpin.android.services.mappers.ImageDocMapper;
 import android.database.sqlite.SQLiteOpenHelper;
+import org.apache.commons.io.IOUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by sesshoumaru on 14.02.16.
@@ -49,12 +53,12 @@ public class ImageDocDbService extends SQLiteOpenHelper implements ImageDocServi
         SQLiteDatabase db = null;
         try {
             db = this.getWritableDatabase();
-            ContentValues cv = ImageDocMapper.INSTANCE.map(imageDoc);
+            ContentValues cv = ImageDocMapper.INSTANCE.map2Db(imageDoc);
             db.insert(ImageDoc.TABLE_NAME, null, cv);
             db.close();
         } catch (Exception e) {
             Log.e(TAG, "Could not create " + imageDoc);
-        }finally {
+        } finally {
             if (db != null)
                 db.close();
         }
@@ -62,8 +66,9 @@ public class ImageDocDbService extends SQLiteOpenHelper implements ImageDocServi
 
     @Override
     public ImageDoc findByName(String name) {
+        SQLiteDatabase db = null;
         try {
-            SQLiteDatabase db = this.getReadableDatabase();
+            db = this.getReadableDatabase();
             Cursor cursor = db.query(ImageDoc.TABLE_NAME, ImageDoc.TABLE_SELECT_COLUMNS,
                     ImageDoc.NAME + "=?", new String[]{name}, null, null, null);
             if (cursor != null) {
@@ -72,6 +77,9 @@ public class ImageDocDbService extends SQLiteOpenHelper implements ImageDocServi
             }
         } catch (Exception e) {
             Log.e(TAG, "Could not find " + name, e);
+        } finally {
+            if (db != null)
+                db.close();
         }
         return null;
     }
@@ -81,7 +89,7 @@ public class ImageDocDbService extends SQLiteOpenHelper implements ImageDocServi
         SQLiteDatabase db = null;
         try {
             db = this.getWritableDatabase();
-            ContentValues cv = ImageDocMapper.INSTANCE.map(imageDoc);
+            ContentValues cv = ImageDocMapper.INSTANCE.map2Db(imageDoc);
             db.update(ImageDoc.TABLE_NAME, cv, ImageDoc.NAME + "=?", new String[]{imageDoc.getName()});
             db.close();
         } catch (Exception e) {
@@ -96,5 +104,28 @@ public class ImageDocDbService extends SQLiteOpenHelper implements ImageDocServi
     public void delete(ImageDoc imageDoc) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(ImageDoc.TABLE_NAME, ImageDoc.NAME + "=?", new String[]{imageDoc.getName()});
+    }
+
+    @Override
+    public List<ImageDoc> findAll() {
+        List<ImageDoc> result = new ArrayList<ImageDoc>();
+        SQLiteDatabase db = null;
+        try {
+            db = this.getReadableDatabase();
+            Cursor cursor = db.query(ImageDoc.TABLE_NAME, ImageDoc.TABLE_SELECT_COLUMNS,
+                    null, null, null, null, null);
+            if (cursor != null) {
+                for (int i = 0; i < cursor.getCount(); i++) {
+                    cursor.moveToPosition(i);
+                    result.add(ImageDocMapper.INSTANCE.map(cursor));
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Could not find all", e);
+        } finally {
+            if (db != null)
+                db.close();
+        }
+        return result;
     }
 }
